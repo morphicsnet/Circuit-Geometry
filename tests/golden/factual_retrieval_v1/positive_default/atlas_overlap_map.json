@@ -1,0 +1,7 @@
+{
+  "chart_count": 4,
+  "lane_id": "factual_retrieval.v1",
+  "model_id": "gpt2-small",
+  "overlap_score": 0.84,
+  "profile": "factual_retrieval"
+}

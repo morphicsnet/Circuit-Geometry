@@ -1,0 +1,28 @@
+{
+  "artifact_id": "artifact-38a409130e20c75c60795cef883c15ad0a0aeab17767614368b589f0cfb88128",
+  "artifact_type": "demo_scorecard",
+  "content_hash": "05e596707ffdc177943fce9747ff3652d27c23af2de83ca915ce119c259abafb",
+  "created_at": "2026-01-01T00:00:00Z",
+  "payload": {
+    "acceptable_fallback_condition": "allow_with_review or route_to_fallback",
+    "escalation_rules": [
+      "escalate_on_failure",
+      "review_on_fallback"
+    ],
+    "failure_condition": "schema invalid or unsafe route",
+    "lane_id": "realworld-policy-qa.v1",
+    "latency_budget_ms": 2000,
+    "success_condition": "confidence+alignment above threshold",
+    "thresholds": {
+      "evidence_alignment_min": 0.55,
+      "false_allow_max": 0.05,
+      "false_block_max": 0.1,
+      "success_confidence_min": 0.55,
+      "success_rate_min": 0.85
+    }
+  },
+  "producer": "geoclt:demo:0.4.0",
+  "run_id": "run-policy",
+  "schema_version": 1,
+  "trace_id": "trace-policy"
+}

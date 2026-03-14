@@ -1,0 +1,8 @@
+[package]
+name = "geoclt-causal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+geoclt-schema = { path = "../geoclt-schema" }

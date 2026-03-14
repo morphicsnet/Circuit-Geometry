@@ -1,0 +1,36 @@
+{
+  "candidate_count": 2,
+  "events": [
+    {
+      "causal_weight": 0.187,
+      "event_id": "event-fixture-positive-1",
+      "participant_set": [
+        "sae:f123",
+        "head:5:3",
+        "mlp:6:17"
+      ],
+      "participant_types": [
+        "sae",
+        "attention_head",
+        "mlp_gate"
+      ],
+      "reliability_score": 0.7392
+    },
+    {
+      "causal_weight": 0.1584,
+      "event_id": "event-fixture-positive-2",
+      "participant_set": [
+        "sae:f208",
+        "head:6:2",
+        "mlp:6:31"
+      ],
+      "participant_types": [
+        "sae",
+        "attention_head",
+        "mlp_gate"
+      ],
+      "reliability_score": 0.6636
+    }
+  ],
+  "lane_id": "factual_retrieval.v1"
+}

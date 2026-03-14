@@ -1,0 +1,13 @@
+[package]
+name = "geoclt-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+geoclt-benchmark = { path = "../geoclt-benchmark" }
+geoclt-artifacts = { path = "../geoclt-artifacts" }
+geoclt-schema = { path = "../geoclt-schema" }
+geoclt-sidecar = { path = "../geoclt-sidecar" }
+chrono.workspace = true
+serde_json.workspace = true

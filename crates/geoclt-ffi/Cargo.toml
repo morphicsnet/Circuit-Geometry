@@ -1,0 +1,12 @@
+[package]
+name = "geoclt-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+pyo3.workspace = true
+serde_json.workspace = true
+geoclt-runtime = { path = "../geoclt-runtime" }
+geoclt-schema = { path = "../geoclt-schema" }
+geoclt-artifacts = { path = "../geoclt-artifacts" }

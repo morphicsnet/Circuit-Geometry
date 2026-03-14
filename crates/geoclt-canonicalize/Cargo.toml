@@ -1,0 +1,13 @@
+[package]
+name = "geoclt-canonicalize"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+serde_jcs.workspace = true
+sha2.workspace = true
+geoclt-schema = { path = "../geoclt-schema" }
+geoclt-ids = { path = "../geoclt-ids" }
+geoclt-units = { path = "../geoclt-units" }

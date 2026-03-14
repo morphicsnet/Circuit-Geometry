@@ -1,0 +1,7 @@
+{
+  "coherence": 0.82,
+  "distortion": 0.18,
+  "geodesic_deviation": 0.2,
+  "lane_id": "factual_retrieval.v1",
+  "loop_consistency": 0.82
+}

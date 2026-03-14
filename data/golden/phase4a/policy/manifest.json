@@ -1,0 +1,69 @@
+{
+  "artifact_id": "artifact-48c434682399a8c121dc740fbaed7e06f1d4baa3d54fd04ec4c2e13c413b98c3",
+  "artifact_type": "golden_dataset_manifest",
+  "content_hash": "00824b04b46e44b1de533a1a00865e85aa2e44f99acc0c87ac42db49f678b50c",
+  "created_at": "2026-01-01T00:00:00Z",
+  "payload": {
+    "ambiguity_flags": [
+      "ambiguous"
+    ],
+    "dataset_hash": "f19a332bce5c580331c6be2fe1e74248d97c8675f16ce901b1ca4da0596b3d3d",
+    "dataset_id": "golden-policy",
+    "dataset_version": "v1",
+    "expected_schema": {
+      "required": [
+        "answer",
+        "routing_label"
+      ],
+      "type": "object"
+    },
+    "items": [
+      {
+        "ambiguous": false,
+        "expected_output": {
+          "label": "allow_with_review"
+        },
+        "input": {
+          "text": "realworld-policy-qa.v1 prompt one"
+        },
+        "item_id": "policy-001",
+        "label": "positive"
+      },
+      {
+        "ambiguous": false,
+        "expected_output": {
+          "label": "allow"
+        },
+        "input": {
+          "text": "realworld-policy-qa.v1 prompt two"
+        },
+        "item_id": "policy-002",
+        "label": "positive"
+      },
+      {
+        "ambiguous": true,
+        "expected_output": {
+          "label": "allow_with_review"
+        },
+        "input": {
+          "text": "realworld-policy-qa.v1 ambiguous prompt"
+        },
+        "item_id": "policy-003",
+        "label": "ambiguous"
+      }
+    ],
+    "labels": [
+      "positive",
+      "ambiguous"
+    ],
+    "lane_id": "realworld-policy-qa.v1",
+    "provenance": {
+      "owner": "phase4",
+      "source": "synthetic-golden"
+    }
+  },
+  "producer": "geoclt:demo:0.4.0",
+  "run_id": "run-policy",
+  "schema_version": 1,
+  "trace_id": "trace-policy"
+}

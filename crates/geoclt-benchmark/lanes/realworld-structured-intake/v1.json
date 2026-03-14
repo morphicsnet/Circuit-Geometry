@@ -1,0 +1,13 @@
+{
+  "lane_id": "realworld-structured-intake.v1",
+  "required_artifacts": ["demo_run_record", "decision_receipt", "demo_scorecard"],
+  "evaluation_steps": ["scorecard", "policy", "receipt"],
+  "thresholds": {
+    "success_rate_min": 0.85,
+    "false_allow_max": 0.05,
+    "false_block_max": 0.1,
+    "latency_budget_ms": 1200
+  },
+  "falsifiers": ["malformed_schema", "unsafe_routing"],
+  "policy_actions": ["allow", "allow_with_review", "route_to_fallback", "block", "escalate"]
+}

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "compatibility_policy": "strict_n_n_minus_1",
+  "artifacts": {
+    "event_record": {
+      "current_version": 2,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "layer_span": "semantic_order",
+        "participant_set": "set_like",
+        "participant_types": "set_like"
+      }
+    },
+    "hyperpath_record": {
+      "current_version": 2,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "event_ids": "set_like",
+        "chart_ids": "set_like",
+        "layer_ids": "semantic_order",
+        "transport_edge_ids": "set_like"
+      }
+    },
+    "benchmark_result": {
+      "current_version": 2,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    },
+    "mechanism_candidate": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "normalized_causal_dependency_set": "set_like",
+        "invariant_feature_signature": "set_like"
+      }
+    },
+    "mechanism_class_record": {
+      "current_version": 2,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "member_path_ids": "set_like",
+        "atlas_variants_tested": "set_like"
+      }
+    },
+    "decision_receipt": {
+      "current_version": 2,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "active_mechanism_class_ids": "set_like",
+        "provisional_mechanism_class_ids": "set_like",
+        "policy_clauses_triggered": "set_like",
+        "geometry_anomaly_flags": "set_like",
+        "chart_instability_flags": "set_like"
+      }
+    },
+    "artifact_bundle": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "artifacts": "set_like"
+      }
+    },
+    "model_profile_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    },
+    "golden_dataset_manifest": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "items": "semantic_order",
+        "labels": "set_like",
+        "ambiguity_flags": "set_like"
+      }
+    },
+    "run_config_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    },
+    "demo_run_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "item_results": "semantic_order",
+        "receipt_refs": "set_like"
+      }
+    },
+    "demo_scorecard": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "escalation_rules": "set_like"
+      }
+    },
+    "pilot_scope_policy_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "in_scope_users": "set_like",
+        "in_scope_tasks": "set_like",
+        "allowed_corpora": "set_like",
+        "review_required_actions": "set_like",
+        "prohibited_actions": "set_like"
+      }
+    },
+    "pilot_run_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    },
+    "operator_review_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    },
+    "drift_alert_record": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {
+        "supporting_refs": "set_like"
+      }
+    },
+    "pilot_metrics_bundle": {
+      "current_version": 1,
+      "min_compatible_version": 1,
+      "array_policy": {}
+    }
+  }
+}

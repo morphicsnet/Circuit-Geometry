@@ -1,0 +1,24 @@
+{
+  "admitted_count": 1,
+  "hyperpaths": [
+    {
+      "admitted": true,
+      "behavior_id": "factual_retrieval",
+      "chart_stability": 0.84,
+      "event_ids": [
+        "event-fixture-positive-1",
+        "event-fixture-positive-2"
+      ],
+      "geodesic_deviation": 0.2,
+      "intervention_faithfulness": 0.22,
+      "layer_ids": [
+        5,
+        6
+      ],
+      "path_id": "path-fixture-positive-1",
+      "synergy_score_max": 0.09,
+      "transport_coherence": 0.82
+    }
+  ],
+  "lane_id": "factual_retrieval.v1"
+}

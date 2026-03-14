@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DemoScorecard",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "demo_scorecard"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "lane_id",
+        "success_condition",
+        "acceptable_fallback_condition",
+        "failure_condition",
+        "latency_budget_ms",
+        "escalation_rules",
+        "thresholds"
+      ],
+      "properties": {
+        "lane_id": {
+          "type": "string"
+        },
+        "success_condition": {
+          "type": "string"
+        },
+        "acceptable_fallback_condition": {
+          "type": "string"
+        },
+        "failure_condition": {
+          "type": "string"
+        },
+        "latency_budget_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "escalation_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "thresholds": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

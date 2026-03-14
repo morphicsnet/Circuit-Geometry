@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package geoclt.benchmark;
+
+message BenchmarkRequest {
+  string workspace_id = 1;
+  string lane_id = 2;
+}
+
+message BenchmarkResponse {
+  bool ok = 1;
+  string report_path = 2;
+}
+
+service BenchmarkService {
+  rpc RunBenchmark(BenchmarkRequest) returns (BenchmarkResponse);
+}

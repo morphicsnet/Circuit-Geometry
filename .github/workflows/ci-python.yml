@@ -1,0 +1,36 @@
+name: ci-python
+on: [push, pull_request]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pip install maturin ruff mypy pytest fastapi httpx jsonschema
+      - run: maturin develop
+      - run: PYTHONPATH=python pytest python/tests -q
+      - run: bash scripts/run_phase01_gate.sh
+      - run: bash scripts/validate_artifacts.sh
+      - run: bash scripts/run_phase3_report_pack.sh
+      - run: ruff check python
+      - run: mypy python/geoclt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase-gate-evidence
+          path: |
+            outputs/determinism_evidence.json
+            outputs/phase_gate_report.json
+            outputs/phase2_gate_report.json
+            outputs/phase3a_gate_report.json
+            outputs/phase3b_gate_report.json
+            outputs/phase4a_gate_report.json
+            outputs/phase4a_nightly_model_report.json
+            outputs/phase4b_gate_report.json
+            docs/reports/phase3a
+            docs/reports/phase3b
+            docs/reports/phase4a
+            docs/reports/phase4b
+          if-no-files-found: error

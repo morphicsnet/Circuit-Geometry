@@ -1,0 +1,49 @@
+{
+  "admission": {
+    "failed_checks": [],
+    "min_margin": 0.04,
+    "passed": true,
+    "thresholds": {
+      "baseline_margin_threshold": 0.05,
+      "behavior_id": "factual_retrieval",
+      "chart_stability_threshold": 0.7,
+      "intervention_delta_threshold": 0.1,
+      "lane_id": "factual_retrieval.v1",
+      "synergy_threshold": 0.05,
+      "transport_coherence_threshold": 0.7
+    }
+  },
+  "baseline_report": {
+    "baseline_scores": {
+      "ensemble_sae": 0.13,
+      "geometry_free": 0.14,
+      "pairwise_graph": 0.12,
+      "single_sae": 0.11
+    },
+    "beats_baseline": true,
+    "delta_vs_strongest": 0.08,
+    "status": "ok",
+    "strongest_baseline": 0.14,
+    "strongest_baseline_id": "geometry_free"
+  },
+  "benchmark_result": {
+    "baseline_id": "geometry_free",
+    "metric_name": "intervention_faithfulness",
+    "metric_value": 0.22,
+    "model_id": "gpt2-small",
+    "passed": true,
+    "run_id": "benchmark-fixture-positive",
+    "task_id": "factual_retrieval",
+    "threshold": 0.1
+  },
+  "conformance_class": "conformant",
+  "falsifiers": {
+    "any_triggered": false,
+    "chart_fragility_triggered": false,
+    "geometry_non_predictiveness_triggered": false,
+    "pairwise_sufficiency_triggered": false,
+    "spurious_synergy_triggered": false,
+    "transport_irrelevance_triggered": false
+  },
+  "lane_id": "factual_retrieval.v1"
+}

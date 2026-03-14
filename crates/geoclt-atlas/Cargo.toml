@@ -1,0 +1,9 @@
+[package]
+name = "geoclt-atlas"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+geoclt-schema = { path = "../geoclt-schema" }

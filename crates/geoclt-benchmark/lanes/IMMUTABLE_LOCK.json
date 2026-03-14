@@ -1,0 +1,12 @@
+{
+  "locked_files": {
+    "claims-triage/v1.json": "6e9bcea3fb57d26ad7183b85ef1b49020ec1d08d3c6b473d232d7000b4c00604",
+    "hallucination-detection/v1.json": "819464cd6a133f215fd769f4bb1f3b1d7c73859ef60ff9ad6ec45ee20081e92d",
+    "realworld-claims-triage/v1.json": "18dbdc3ae3a9905a42b753fabcf354c8186d86d3cdd73d90f72eff0cb75be679",
+    "realworld-policy-qa/v1.json": "f244799186525c03c156839e13e662be8c56b0e1f4f2e6c9dfcc28f4d2d570f6",
+    "realworld-structured-intake/v1.json": "f9bc2d060aa3a2718bd3b50e176e561722b07e16a24565b0e12df9ad4a86af7a",
+    "reasoning-path-consistency/v1.json": "7d5c87d342e64b8e4c963909d638e59bbce833c65a1bb22b64ec324ba39e3cb0",
+    "safety-mechanism-check/v1.json": "d4739568e36962bd1221e2acbbacd7215d6ba84d40fff6480a1f792cda2c5c48"
+  },
+  "version": 2
+}

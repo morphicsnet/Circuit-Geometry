@@ -1,0 +1,14 @@
+{
+  "lane_id": "claims-triage.v1",
+  "required_artifacts": ["mechanism_class_record", "decision_receipt"],
+  "evaluation_steps": ["admission", "falsifiers", "policy"],
+  "thresholds": {
+    "intervention_delta_threshold": 0.1,
+    "synergy_threshold": 0.05,
+    "chart_stability_threshold": 0.7,
+    "transport_coherence_threshold": 0.7,
+    "baseline_margin_threshold": 0.05
+  },
+  "falsifiers": ["pairwise_sufficiency", "spurious_synergy"],
+  "policy_actions": ["allow", "allow_with_review", "route_to_fallback", "block", "escalate"]
+}

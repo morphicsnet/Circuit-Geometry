@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geo-CLT Mechanism Explorer</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Geo-CLT</p>
+        <h1>Mechanism Explorer</h1>
+        <p class="subhead">
+          Run benchmark lanes, inspect evidence artifacts, and verify deterministic reruns.
+        </p>
+      </header>
+
+      <section class="controls panel">
+        <div class="field">
+          <label for="apiBase">API Base</label>
+          <input id="apiBase" type="text" value="http://127.0.0.1:8000" />
+        </div>
+        <div class="field">
+          <label for="workspace">Workspace</label>
+          <input id="workspace" type="text" value="runs/factual-retrieval" />
+        </div>
+        <div class="field">
+          <label for="lane">Lane ID</label>
+          <input id="lane" type="text" value="factual_retrieval.v1" />
+        </div>
+        <div class="field">
+          <label for="behavior">Behavior ID</label>
+          <input id="behavior" type="text" value="factual_retrieval" />
+        </div>
+        <div class="field">
+          <label for="model">Model ID</label>
+          <input id="model" type="text" value="gpt2-small" />
+        </div>
+        <div class="actions">
+          <button id="runBtn" class="primary">Run Benchmark</button>
+          <button id="refreshBtn">Refresh Runs</button>
+          <button id="exportBtn">Export Selected</button>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel">
+          <h2>Runs</h2>
+          <ul id="runList" class="run-list"></ul>
+        </article>
+
+        <article class="panel">
+          <h2>Selected Run</h2>
+          <div id="runSummary" class="code-block">No run selected.</div>
+          <h3>Determinism</h3>
+          <div id="determinismSummary" class="code-block">No run selected.</div>
+          <h3>Artifacts</h3>
+          <div id="artifactSummary" class="code-block">No run selected.</div>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

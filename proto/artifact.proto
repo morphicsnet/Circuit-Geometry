@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package geoclt.artifact;
+
+message ArtifactRef {
+  string artifact_id = 1;
+  string path = 2;
+}

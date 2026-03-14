@@ -1,0 +1,21 @@
+lane_id = "factual_retrieval.v1"
+behavior_id = "factual_retrieval"
+intervention_delta_threshold = 0.10
+synergy_threshold = 0.05
+chart_stability_threshold = 0.70
+transport_coherence_threshold = 0.70
+baseline_margin_threshold = 0.05
+
+[model]
+model_id = "gpt2-small"
+block_pair = [5, 6]
+token_position_class = "answer-token"
+
+[atlas]
+chart_count = 3
+
+[transport]
+enabled = true
+
+[geometry]
+mode = "pullback"

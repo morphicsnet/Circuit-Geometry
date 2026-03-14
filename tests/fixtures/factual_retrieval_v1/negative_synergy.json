@@ -1,0 +1,37 @@
+{
+  "lane": {
+    "lane_id": "factual_retrieval.v1",
+    "behavior_id": "factual_retrieval",
+    "intervention_delta_threshold": 0.1,
+    "synergy_threshold": 0.05,
+    "chart_stability_threshold": 0.7,
+    "transport_coherence_threshold": 0.7,
+    "baseline_margin_threshold": 0.05
+  },
+  "model_id": "gpt2-small",
+  "metrics": {
+    "intervention_faithfulness": 0.21,
+    "synergy_score_max": 0.03,
+    "chart_stability": 0.86,
+    "transport_coherence": 0.84,
+    "geodesic_deviation": 0.19
+  },
+  "baselines": [
+    {
+      "baseline_id": "single_sae",
+      "intervention_faithfulness": 0.09
+    },
+    {
+      "baseline_id": "ensemble_sae",
+      "intervention_faithfulness": 0.1
+    },
+    {
+      "baseline_id": "pairwise_graph",
+      "intervention_faithfulness": 0.1
+    },
+    {
+      "baseline_id": "geometry_free",
+      "intervention_faithfulness": 0.08
+    }
+  ]
+}

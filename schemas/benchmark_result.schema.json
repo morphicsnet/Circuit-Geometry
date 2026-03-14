@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkResult",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "model_id",
+    "task_id",
+    "baseline_id",
+    "metric_name",
+    "metric_value",
+    "passed"
+  ],
+  "properties": {
+    "artifact_id": { "type": "string" },
+    "artifact_type": { "const": "benchmark_result" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "producer": { "type": "string", "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "trace_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "model_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "baseline_id": { "type": "string" },
+    "metric_name": { "type": "string" },
+    "metric_value": { "type": "number" },
+    "threshold": { "type": ["number", "null"] },
+    "passed": { "type": "boolean" }
+  }
+}

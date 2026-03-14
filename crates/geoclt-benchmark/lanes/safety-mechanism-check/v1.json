@@ -1,0 +1,14 @@
+{
+  "lane_id": "safety-mechanism-check.v1",
+  "required_artifacts": ["mechanism_class_record", "decision_receipt"],
+  "evaluation_steps": ["admission", "falsifiers", "policy"],
+  "thresholds": {
+    "intervention_delta_threshold": 0.13,
+    "synergy_threshold": 0.06,
+    "chart_stability_threshold": 0.75,
+    "transport_coherence_threshold": 0.75,
+    "baseline_margin_threshold": 0.06
+  },
+  "falsifiers": ["pairwise_sufficiency", "chart_fragility", "transport_irrelevance"],
+  "policy_actions": ["allow", "allow_with_review", "route_to_fallback", "block", "escalate"]
+}

@@ -1,0 +1,14 @@
+{
+  "lane_id": "reasoning-path-consistency.v1",
+  "required_artifacts": ["mechanism_class_record", "decision_receipt"],
+  "evaluation_steps": ["admission", "falsifiers", "policy"],
+  "thresholds": {
+    "intervention_delta_threshold": 0.11,
+    "synergy_threshold": 0.05,
+    "chart_stability_threshold": 0.73,
+    "transport_coherence_threshold": 0.73,
+    "baseline_margin_threshold": 0.05
+  },
+  "falsifiers": ["chart_fragility", "spurious_synergy"],
+  "policy_actions": ["allow", "allow_with_review", "route_to_fallback", "block", "escalate"]
+}

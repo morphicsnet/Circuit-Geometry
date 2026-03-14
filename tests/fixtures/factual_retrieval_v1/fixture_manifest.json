@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "lane_id": "factual_retrieval.v1",
+  "behavior_id": "factual_retrieval",
+  "baseline_ids": [
+    "single_sae",
+    "ensemble_sae",
+    "pairwise_graph",
+    "geometry_free"
+  ],
+  "thresholds": {
+    "intervention_delta_threshold": 0.1,
+    "synergy_threshold": 0.05,
+    "chart_stability_threshold": 0.7,
+    "transport_coherence_threshold": 0.7,
+    "baseline_margin_threshold": 0.05
+  },
+  "fixtures": [
+    {
+      "id": "positive_default",
+      "path": "positive_default.json",
+      "expected_conformance_class": "conformant",
+      "expected_falsifiers": {
+        "any_triggered": false
+      }
+    },
+    {
+      "id": "negative_pairwise_margin",
+      "path": "negative_pairwise_margin.json",
+      "expected_conformance_class": "rejected",
+      "expected_falsifiers": {
+        "pairwise_sufficiency_triggered": true,
+        "any_triggered": true
+      }
+    },
+    {
+      "id": "negative_synergy",
+      "path": "negative_synergy.json",
+      "expected_conformance_class": "rejected",
+      "expected_falsifiers": {
+        "spurious_synergy_triggered": true,
+        "any_triggered": true
+      }
+    }
+  ]
+}
