@@ -65,7 +65,7 @@ message ServerStatus {
 service SidecarService {
   rpc StartTrace(TraceStart) returns (Ack);
   rpc PushActivation(ActivationChunk) returns (Ack);
-  rpc EndTrace(TraceEnd) returns (Ack);
+  rpc EndTrace(TraceEnd) returns (ArtifactInline);
   rpc AbortTrace(TraceAbort) returns (Ack);
   rpc GetStatus(Ack) returns (ServerStatus);
 }

@@ -54,3 +54,12 @@ phase4a-nightly:
 
 phase4b-gate:
     bash scripts/run_phase4b_gate.sh
+
+phase4-report-pack:
+    bash scripts/run_phase4_report_pack.sh
+
+release-candidate:
+    bash scripts/run_release_candidate.sh
+
+release:
+    bash scripts/release.sh

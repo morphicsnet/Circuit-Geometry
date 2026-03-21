@@ -42,6 +42,8 @@ ws.export_report(run["run_id"])
 
 ## Local API
 ```bash
+export GEOCLT_AUTH_MODE=token
+export GEOCLT_AUTH_TOKEN=geoclt-local-token
 PYTHONPATH=python uvicorn services.api.app:app --reload
 curl "http://127.0.0.1:8000/health"
 curl -X POST "http://127.0.0.1:8000/runs" \
@@ -51,8 +53,58 @@ curl "http://127.0.0.1:8000/runs?workspace=runs/factual-retrieval"
 curl "http://127.0.0.1:8000/runs/<run_id>/determinism?workspace=runs/factual-retrieval"
 ```
 
+Demo/pilot endpoints require bearer auth when `GEOCLT_AUTH_MODE=token`:
+```bash
+curl -X POST "http://127.0.0.1:8000/demo/submit" \
+  -H "authorization: Bearer geoclt-local-token" \
+  -H "content-type: application/json" \
+  -d '{"workspace":"runs/phase4-demo","lane_id":"realworld-claims-triage.v1","requested_action":"allow"}'
+```
+
 ## Local UI
 ```bash
 make api
 make ui
+```
+
+## Phase Gates
+```bash
+# Full phase validation chain (0 -> 4B)
+bash scripts/validate_artifacts.sh
+
+# Phase 4A CI stub gate
+bash scripts/run_phase4a_gate.sh
+
+# Phase 4A nightly/manual model validation
+bash scripts/run_phase4a_nightly_models.sh
+
+# Phase 4B bounded pilot gate (requires 4A reports present)
+bash scripts/run_phase4b_gate.sh
+
+# Refresh all Phase 4 report pack docs
+bash scripts/run_phase4_report_pack.sh
+
+# Internal RC readiness chain
+bash scripts/run_release_candidate.sh
+
+# Internal RC cut (archive + optional tag via GEOCLT_RC_TAG)
+bash scripts/release.sh
+```
+
+## Real Deterministic Mode (Phase 0/1)
+Phase 0/1 gate scripts now always run the real deterministic activation flow using Transformers (`gpt2` backend for `gpt2-small` alias).
+
+```bash
+# Optional one-time local cache warmup
+python3 - <<'PY'
+from transformers import AutoTokenizer, AutoModelForCausalLM
+AutoTokenizer.from_pretrained("gpt2")
+AutoModelForCausalLM.from_pretrained("gpt2")
+print("gpt2 cache warm")
+PY
+
+# Real deterministic evidence
+python3 scripts/check_determinism.py
+python3 scripts/generate_phase_gate_report.py
+python3 scripts/assert_phase01_gate_report.py
 ```

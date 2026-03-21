@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import os
+
 from fastapi.testclient import TestClient
 
 from services.api.app import app
+
+AUTH_HEADERS = {"authorization": f"Bearer {os.getenv('GEOCLT_AUTH_TOKEN', 'geoclt-local-token')}"}
 
 
 def test_phase4_pilot_flow_and_metrics(tmp_path):
@@ -11,6 +15,7 @@ def test_phase4_pilot_flow_and_metrics(tmp_path):
 
     demo = client.post(
         "/demo/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": "realworld-claims-triage.v1",
@@ -22,6 +27,7 @@ def test_phase4_pilot_flow_and_metrics(tmp_path):
 
     submit = client.post(
         "/pilot/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": "realworld-claims-triage.v1",
@@ -37,6 +43,7 @@ def test_phase4_pilot_flow_and_metrics(tmp_path):
 
     review = client.post(
         "/pilot/review",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "pilot_run_id": pilot_run_id,
@@ -53,8 +60,12 @@ def test_phase4_pilot_flow_and_metrics(tmp_path):
     assert review.status_code == 200
     assert review.json()["reviewer_pseudonym"].startswith("reviewer-")
 
-    receipts = client.get(f"/pilot/receipt/{pilot_run_id}", params={"workspace": workspace})
-    metrics = client.get("/pilot/metrics", params={"workspace": workspace})
+    receipts = client.get(
+        f"/pilot/receipt/{pilot_run_id}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
+    metrics = client.get("/pilot/metrics", params={"workspace": workspace}, headers=AUTH_HEADERS)
     assert receipts.status_code == 200
     assert metrics.status_code == 200
 
@@ -69,6 +80,7 @@ def test_phase4_pilot_scope_rejects_out_of_bounds_request(tmp_path):
 
     submit = client.post(
         "/pilot/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": "realworld-claims-triage.v1",

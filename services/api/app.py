@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+import os
 import sys
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,6 +29,7 @@ from geoclt.demo import (
     run_demo_lane,
 )
 from geoclt.differential import cohort_summary, diff_mechanism_sets
+from geoclt.external_services import queue_event, queue_backend, store_backend, store_bundle
 from geoclt.field_trials import (
     build_operator_review_record,
     build_pilot_metrics_bundle,
@@ -74,6 +76,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _auth_mode() -> str:
+    return os.getenv("GEOCLT_AUTH_MODE", "token").strip().lower()
+
+
+def _auth_token() -> str:
+    return os.getenv("GEOCLT_AUTH_TOKEN", "geoclt-local-token")
+
+
+def require_auth_token(authorization: str | None = Header(default=None)) -> str:
+    if _auth_mode() != "token":
+        return "auth-disabled"
+    expected = f"Bearer {_auth_token()}"
+    if authorization != expected:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    return "token-authenticated"
 
 
 class RunRequest(BaseModel):
@@ -307,7 +326,10 @@ def get_determinism(run_id: str, workspace: str = Query(..., min_length=1)) -> d
 
 
 @app.post("/trace")
-def create_trace(request: TraceRequest) -> dict[str, object]:
+def create_trace(
+    request: TraceRequest,
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, object]:
     ws = Workspace.create(request.workspace)
     ws.attach_model(request.model_id)
     ws.fit_atlas(profile=request.behavior_id)
@@ -329,7 +351,10 @@ def create_trace(request: TraceRequest) -> dict[str, object]:
 
 
 @app.post("/evaluate_lane")
-def evaluate_lane(request: EvaluateLaneRequest) -> dict[str, object]:
+def evaluate_lane(
+    request: EvaluateLaneRequest,
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, object]:
     ws = Workspace.create(request.workspace)
     run = ws.get_run(request.run_id)
     report = ws.load_report(request.run_id)
@@ -359,7 +384,9 @@ def get_mechanism(mechanism_id: str, workspace: str = Query(..., min_length=1)) 
 
 @app.get("/decision_receipt/{receipt_id}")
 def get_decision_receipt(
-    receipt_id: str, workspace: str = Query(..., min_length=1)
+    receipt_id: str,
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
 ) -> dict[str, object]:
     ws = Workspace.create(workspace)
     for run in ws.list_runs():
@@ -374,7 +401,10 @@ def get_decision_receipt(
 
 
 @app.get("/analysis/report")
-def get_analysis_report(workspace: str = Query(..., min_length=1)) -> dict[str, object]:
+def get_analysis_report(
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, object]:
     ws = Workspace.create(workspace)
     runs = ws.list_runs()
     if len(runs) < 2:
@@ -401,7 +431,10 @@ def get_analysis_report(workspace: str = Query(..., min_length=1)) -> dict[str, 
 
 
 @app.post("/demo/submit")
-def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
+def submit_demo(
+    request: DemoSubmitRequest,
+    auth_result: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     if request.requested_action not in ALLOWED_POLICY_ACTIONS:
         raise HTTPException(status_code=400, detail=f"unsupported requested action: {request.requested_action}")
 
@@ -465,6 +498,7 @@ def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
         scorecard=scorecard,
         trace_id=trace_id,
         run_id=run_id,
+        caller_id=auth_result,
     )
 
     replay_result = run_demo_lane(
@@ -475,8 +509,19 @@ def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
         scorecard=scorecard,
         trace_id=trace_id,
         run_id=run_id,
+        caller_id=auth_result,
     )
     replay_is_deterministic = deterministic_replay(run_result["outputs"], replay_result["outputs"])
+    bundle_ref = store_bundle(run_result["bundle"], workspace=request.workspace)
+    queue_status = queue_event(
+        {
+            "event": "demo_bundle_persisted",
+            "run_id": run_id,
+            "lane_id": request.lane_id,
+            "bundle_hash": run_result["bundle"]["bundle_hash"],
+            "backend": bundle_ref["backend"],
+        }
+    )
 
     demo_record = {
         "lane_id": request.lane_id,
@@ -490,6 +535,8 @@ def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
         "scoring": run_result["scoring"],
         "demo_run_record": run_result["demo_run_record"],
         "bundle": run_result["bundle"],
+        "bundle_ref": bundle_ref,
+        "queue_status": queue_status,
         "receipts": run_result["receipts"],
         "outputs": run_result["outputs"],
         "run_hash": run_result["run_hash"],
@@ -503,8 +550,11 @@ def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
             "run_id": run_id,
             "trace_id": trace_id,
             "report_bundle": run_result["bundle"],
+            "report_bundle_ref": bundle_ref,
             "scoring": run_result["scoring"],
             "run_hash": run_result["run_hash"],
+            "store_backend": store_backend(),
+            "queue_backend": queue_backend(),
         },
     )
     for receipt in run_result["receipts"]:
@@ -523,11 +573,17 @@ def submit_demo(request: DemoSubmitRequest) -> dict[str, Any]:
         "success_rate": run_result["scoring"]["success_rate"],
         "fallback_rate": run_result["scoring"]["fallback_rate"],
         "report_bundle_hash": run_result["bundle"]["bundle_hash"],
+        "report_bundle_ref": bundle_ref,
+        "queue_status": queue_status,
     }
 
 
 @app.get("/demo/receipt/{run_id}")
-def get_demo_receipts(run_id: str, workspace: str = Query(..., min_length=1)) -> dict[str, Any]:
+def get_demo_receipts(
+    run_id: str,
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     run = _load_demo_run(workspace, run_id)
     return {
         "status": "ok",
@@ -538,7 +594,11 @@ def get_demo_receipts(run_id: str, workspace: str = Query(..., min_length=1)) ->
 
 
 @app.get("/demo/report/{run_id}")
-def get_demo_report(run_id: str, workspace: str = Query(..., min_length=1)) -> dict[str, Any]:
+def get_demo_report(
+    run_id: str,
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     directories = _phase4_dirs(workspace)
     report_path = directories["demo_reports"] / f"{run_id}.json"
     if not report_path.exists():
@@ -547,7 +607,10 @@ def get_demo_report(run_id: str, workspace: str = Query(..., min_length=1)) -> d
 
 
 @app.post("/pilot/submit")
-def submit_pilot(request: PilotSubmitRequest) -> dict[str, Any]:
+def submit_pilot(
+    request: PilotSubmitRequest,
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     if request.requested_action not in ALLOWED_POLICY_ACTIONS:
         raise HTTPException(status_code=400, detail=f"unsupported requested action: {request.requested_action}")
 
@@ -597,7 +660,10 @@ def submit_pilot(request: PilotSubmitRequest) -> dict[str, Any]:
 
 
 @app.post("/pilot/review")
-def submit_pilot_review(request: PilotReviewRequest) -> dict[str, Any]:
+def submit_pilot_review(
+    request: PilotReviewRequest,
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     directories = _phase4_dirs(request.workspace)
     pilot_run_path = directories["pilot_runs"] / f"{request.pilot_run_id}.json"
     if not pilot_run_path.exists():
@@ -631,7 +697,11 @@ def submit_pilot_review(request: PilotReviewRequest) -> dict[str, Any]:
 
 
 @app.get("/pilot/receipt/{run_id}")
-def get_pilot_receipts(run_id: str, workspace: str = Query(..., min_length=1)) -> dict[str, Any]:
+def get_pilot_receipts(
+    run_id: str,
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     directories = _phase4_dirs(workspace)
     pilot_run_path = directories["pilot_runs"] / f"{run_id}.json"
     if not pilot_run_path.exists():
@@ -648,7 +718,10 @@ def get_pilot_receipts(run_id: str, workspace: str = Query(..., min_length=1)) -
 
 
 @app.get("/pilot/metrics")
-def get_pilot_metrics(workspace: str = Query(..., min_length=1)) -> dict[str, Any]:
+def get_pilot_metrics(
+    workspace: str = Query(..., min_length=1),
+    _auth: str = Depends(require_auth_token),
+) -> dict[str, Any]:
     directories = _phase4_dirs(workspace)
     scope_record = _load_or_create_scope_record(workspace)
 

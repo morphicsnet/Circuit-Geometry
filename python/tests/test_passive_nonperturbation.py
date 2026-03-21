@@ -1,8 +1,8 @@
-from geoclt.adapters import MockAdapter
+from geoclt.adapters import TransformersAdapter
 
 
 def test_passive_hooks_preserve_token_outputs_and_logits_hash():
-    adapter = MockAdapter(model_id="gpt2-small")
+    adapter = TransformersAdapter(model_id="gpt2-small")
     prompt = "who discovered penicillin"
 
     tokens_before = adapter.infer_tokens(prompt)

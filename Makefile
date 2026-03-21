@@ -1,4 +1,4 @@
-.PHONY: all build test lint poc api ui phase01-gate phase2-gate phase3a-gate phase3b-gate phase3-report-pack phase4a-gate phase4a-nightly phase4b-gate
+.PHONY: all build test lint poc api ui phase01-gate phase2-gate phase3a-gate phase3b-gate phase3-report-pack phase4a-gate phase4a-nightly phase4b-gate phase4-report-pack release-candidate release
 
 all: build test
 
@@ -47,3 +47,12 @@ phase4a-nightly:
 
 phase4b-gate:
 	bash scripts/run_phase4b_gate.sh
+
+phase4-report-pack:
+	bash scripts/run_phase4_report_pack.sh
+
+release-candidate:
+	bash scripts/run_release_candidate.sh
+
+release:
+	bash scripts/release.sh

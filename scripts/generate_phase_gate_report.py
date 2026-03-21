@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import argparse
 import json
+import os
 from pathlib import Path
 import sys
 from typing import Any
+import argparse
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PYTHON_SRC = REPO_ROOT / "python"
@@ -143,6 +144,11 @@ def run_phase1_workflow(workspace_path: str) -> dict[str, Any]:
     for artifact_type, path in run_two["artifact_paths"].items():
         artifact_payloads[artifact_type] = json.loads(Path(path).read_text(encoding="utf-8"))
 
+    run_one_artifacts = {
+        artifact_type: json.loads(Path(path).read_text(encoding="utf-8"))
+        for artifact_type, path in run_one["artifact_paths"].items()
+    }
+
     artifact_checks = {
         "atlas_overlap_map": {
             "ok": all(
@@ -192,9 +198,37 @@ def run_phase1_workflow(workspace_path: str) -> dict[str, Any]:
         },
     }
     artifacts_valid = all(entry["ok"] for entry in artifact_checks.values())
+    falsifier_sheet = artifact_payloads.get("falsifier_sheet", {})
+    pipeline_mode = str(falsifier_sheet.get("pipeline_mode", ""))
+    backend_type = str(falsifier_sheet.get("backend_type", ""))
+    token_count = int(falsifier_sheet.get("token_count", 0) or 0)
+    prompt_hash = falsifier_sheet.get("prompt_hash")
+    real_pipeline_used = (
+        pipeline_mode == "real-transformers"
+        and backend_type == "transformers-real"
+        and token_count > 0
+        and isinstance(prompt_hash, str)
+        and len(prompt_hash) == 64
+    )
+
+    run_one_candidates = run_one_artifacts.get("candidate_event_table", {}).get("events", [])
+    run_one_hyperpaths = run_one_artifacts.get("admitted_hyperpath_table", {}).get("hyperpaths", [])
+    higher_order_candidate_present = any(
+        len(event.get("participant_set", [])) >= 3
+        and set(event.get("participant_types", [])) >= {"sae", "attention_head", "mlp_gate"}
+        for event in run_one_candidates
+    )
     return {
         "run_one_id": run_one["run_id"],
         "run_two_id": run_two["run_id"],
+        "phase0_real_checks": {
+            "real_positive_case_conformant": run_one["conformance_class"] == "conformant",
+            "real_positive_case_beats_baseline": bool(run_one["baseline_report"]["beats_baseline"]),
+            "real_positive_case_admission_passed": bool(run_one["admission"]["passed"]),
+            "real_higher_order_candidate_present": higher_order_candidate_present,
+            "real_admitted_hyperpath_present": len(run_one_hyperpaths) >= 1,
+            "real_backend_type_valid": run_one["metadata"].get("backend_type") == "transformers-real",
+        },
         "phase1_checks": {
             "run_completed": run_two["status"] == "completed",
             "artifact_count_is_five": len(run_two["artifact_paths"]) == 5,
@@ -209,8 +243,17 @@ def run_phase1_workflow(workspace_path: str) -> dict[str, Any]:
             "bundle_hash_stable_across_reruns": (
                 run_one["artifact_bundle_hash"] == run_two["artifact_bundle_hash"]
             ),
+            "real_pipeline_used": real_pipeline_used,
+            "non_stub_backend_used": run_two["metadata"].get("backend_type") == "transformers-real",
         },
         "artifact_checks": artifact_checks,
+        "pipeline_details": {
+            "pipeline_mode": pipeline_mode,
+            "backend_type": backend_type,
+            "token_count": token_count,
+            "prompt_hash_present": isinstance(prompt_hash, str),
+            "require_real": True,
+        },
     }
 
 
@@ -219,7 +262,8 @@ def main() -> int:
     fixture_results = evaluate_fixture_cases()
     workflow_results = run_phase1_workflow(args.workspace)
 
-    phase0_checks = fixture_results["phase0_contract_checks"]
+    phase0_checks = dict(fixture_results["phase0_contract_checks"])
+    phase0_checks.update(workflow_results.get("phase0_real_checks", {}))
     phase1_checks = workflow_results["phase1_checks"]
 
     payload = {
@@ -230,6 +274,7 @@ def main() -> int:
             "run_one_id": workflow_results["run_one_id"],
             "run_two_id": workflow_results["run_two_id"],
         },
+        "pipeline": workflow_results["pipeline_details"],
     }
     payload["overall_pass"] = all(phase0_checks.values()) and all(phase1_checks.values())
 

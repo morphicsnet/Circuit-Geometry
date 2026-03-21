@@ -1,12 +1,41 @@
 name: wheels
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11"]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: PyO3/maturin-action@v1
         with:
           command: build
+          manylinux: auto
+      - name: Install wheel and smoke test
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install target/wheels/*.whl
+          python - <<'PY'
+          import geoclt
+          import geoclt_native
+          print("python import smoke ok", geoclt.__name__, geoclt_native.__name__)
+          PY
+      - name: CLI smoke
+        run: cargo run -p geoclt-cli -- version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: target/wheels/*.whl
+          if-no-files-found: error

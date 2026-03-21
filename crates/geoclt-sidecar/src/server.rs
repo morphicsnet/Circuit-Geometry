@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::env;
 use std::sync::Arc;
 
 use geoclt_artifacts::bundle::validate_artifact_bundle;
@@ -11,7 +12,7 @@ use crate::batching::{backpressure_signal, Backpressure};
 use crate::emit::assemble_bundle;
 use crate::proto::sidecar_service_server::{SidecarService, SidecarServiceServer};
 use crate::proto::{
-    Ack, ActivationChunk, ServerStatus, TraceAbort, TraceEnd, TraceStart,
+    Ack, ActivationChunk, ArtifactInline, ServerStatus, TraceAbort, TraceEnd, TraceStart,
 };
 use crate::trace_state::{TraceContext, TraceStage};
 
@@ -57,7 +58,7 @@ impl SidecarServer {
         trace_id: &str,
         chunk_idempotency_key: &str,
         payload: Vec<u8>,
-    ) -> Result<Backpressure, String> {
+    ) -> Result<(Backpressure, bool), String> {
         let context = self
             .traces
             .get_mut(trace_id)
@@ -65,7 +66,7 @@ impl SidecarServer {
 
         if let Some(existing) = context.chunks.get(chunk_idempotency_key) {
             if existing == &payload {
-                return Ok(backpressure_signal(context.chunks.len()));
+                return Ok((backpressure_signal(context.chunks.len()), true));
             }
             context.stage = TraceStage::Failed;
             context.status = "FAILED".to_string();
@@ -76,7 +77,7 @@ impl SidecarServer {
         context.chunk_count = context.chunks.len();
         context.stage = TraceStage::Streaming;
         context.status = "STREAMING".to_string();
-        Ok(backpressure_signal(context.chunk_count))
+        Ok((backpressure_signal(context.chunk_count), false))
     }
 
     pub fn end_trace(&mut self, trace_id: &str) -> Result<ArtifactBundle, String> {
@@ -127,11 +128,32 @@ impl SidecarGrpcService {
             inner: Arc::new(Mutex::new(server)),
         }
     }
+
+    fn enforce_auth<T>(&self, request: &Request<T>) -> Result<(), Status> {
+        let mode = env::var("GEOCLT_AUTH_MODE").unwrap_or_else(|_| "token".to_string());
+        if mode != "token" {
+            return Ok(());
+        }
+        let expected = env::var("GEOCLT_AUTH_TOKEN")
+            .unwrap_or_else(|_| "geoclt-local-token".to_string());
+        let metadata = request.metadata();
+        let Some(value) = metadata.get("authorization") else {
+            return Err(Status::unauthenticated("missing authorization token"));
+        };
+        let header = value
+            .to_str()
+            .map_err(|_| Status::unauthenticated("invalid authorization header"))?;
+        if header != format!("Bearer {expected}") {
+            return Err(Status::unauthenticated("invalid authorization token"));
+        }
+        Ok(())
+    }
 }
 
 #[tonic::async_trait]
 impl SidecarService for SidecarGrpcService {
     async fn start_trace(&self, request: Request<TraceStart>) -> Result<Response<Ack>, Status> {
+        self.enforce_auth(&request)?;
         let req = request.into_inner();
         let mut guard = self.inner.lock().await;
         guard
@@ -154,28 +176,42 @@ impl SidecarService for SidecarGrpcService {
         &self,
         request: Request<ActivationChunk>,
     ) -> Result<Response<Ack>, Status> {
+        self.enforce_auth(&request)?;
         let req = request.into_inner();
         let mut guard = self.inner.lock().await;
-        guard
+        let (bp, duplicate) = guard
             .push_chunk(&req.trace_id, &req.chunk_idempotency_key, req.payload)
             .map_err(Status::internal)?;
         Ok(Response::new(Ack {
             ok: true,
-            message: "chunk accepted".to_string(),
+            message: if duplicate {
+                "duplicate-noop".to_string()
+            } else {
+                format!("chunk accepted; queue_depth={}; delay_ms={}", bp.queue_depth, bp.recommended_delay_ms)
+            },
         }))
     }
 
-    async fn end_trace(&self, request: Request<TraceEnd>) -> Result<Response<Ack>, Status> {
+    async fn end_trace(
+        &self,
+        request: Request<TraceEnd>,
+    ) -> Result<Response<ArtifactInline>, Status> {
+        self.enforce_auth(&request)?;
         let req = request.into_inner();
         let mut guard = self.inner.lock().await;
         let bundle = guard.end_trace(&req.trace_id).map_err(Status::internal)?;
-        Ok(Response::new(Ack {
-            ok: true,
-            message: bundle.bundle_hash,
+        let bundle_json = serde_json::to_vec(&bundle).map_err(|error| {
+            Status::internal(format!("failed to serialize artifact bundle: {error}"))
+        })?;
+        Ok(Response::new(ArtifactInline {
+            bundle_id: bundle.bundle_id,
+            bundle_json,
+            bundle_hash: bundle.bundle_hash,
         }))
     }
 
     async fn abort_trace(&self, request: Request<TraceAbort>) -> Result<Response<Ack>, Status> {
+        self.enforce_auth(&request)?;
         let req = request.into_inner();
         let mut guard = self.inner.lock().await;
         guard.abort_trace(&req.trace_id).map_err(Status::internal)?;
@@ -185,7 +221,8 @@ impl SidecarService for SidecarGrpcService {
         }))
     }
 
-    async fn get_status(&self, _request: Request<Ack>) -> Result<Response<ServerStatus>, Status> {
+    async fn get_status(&self, request: Request<Ack>) -> Result<Response<ServerStatus>, Status> {
+        self.enforce_auth(&request)?;
         let guard = self.inner.lock().await;
         Ok(Response::new(ServerStatus {
             status: "ok".to_string(),
@@ -224,7 +261,7 @@ mod tests {
         sidecar
             .start_trace(
                 "trace-1",
-                "mock",
+                "transformers",
                 "gpt2-small",
                 "factual_retrieval.v1",
                 "run-1",
@@ -249,7 +286,7 @@ mod tests {
         sidecar
             .start_trace(
                 "trace-2",
-                "mock",
+                "transformers",
                 "gpt2-small",
                 "factual_retrieval.v1",
                 "run-2",
@@ -283,7 +320,7 @@ mod more_tests {
         sidecar
             .start_trace(
                 "trace-a",
-                "mock",
+                "transformers",
                 "gpt2-small",
                 "factual_retrieval.v1",
                 "run-a",
@@ -293,7 +330,7 @@ mod more_tests {
         sidecar
             .start_trace(
                 "trace-b",
-                "mock",
+                "transformers",
                 "gpt2-small",
                 "factual_retrieval.v1",
                 "run-b",

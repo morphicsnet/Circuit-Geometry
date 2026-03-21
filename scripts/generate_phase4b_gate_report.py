@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -17,6 +18,8 @@ from fastapi.testclient import TestClient
 from geoclt.artifacts import stable_hash, validate_instance
 from geoclt.differential import cohort_summary
 from services.api.app import app
+
+AUTH_HEADERS = {"authorization": f"Bearer {os.getenv('GEOCLT_AUTH_TOKEN', 'geoclt-local-token')}"}
 
 
 def _git_commit() -> str:
@@ -49,6 +52,7 @@ def main() -> int:
 
     demo = client.post(
         "/demo/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": lane_id,
@@ -64,6 +68,7 @@ def main() -> int:
 
     submit = client.post(
         "/pilot/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": lane_id,
@@ -83,6 +88,7 @@ def main() -> int:
 
     review = client.post(
         "/pilot/review",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "pilot_run_id": pilot_run_id,
@@ -97,9 +103,21 @@ def main() -> int:
         },
     )
 
-    receipt = client.get(f"/pilot/receipt/{pilot_run_id}", params={"workspace": workspace})
-    metrics_one = client.get("/pilot/metrics", params={"workspace": workspace})
-    metrics_two = client.get("/pilot/metrics", params={"workspace": workspace})
+    receipt = client.get(
+        f"/pilot/receipt/{pilot_run_id}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
+    metrics_one = client.get(
+        "/pilot/metrics",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
+    metrics_two = client.get(
+        "/pilot/metrics",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
 
     if review.status_code != 200 or receipt.status_code != 200 or metrics_one.status_code != 200:
         print("phase4b pilot flow failed")

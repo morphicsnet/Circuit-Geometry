@@ -41,4 +41,8 @@ pub struct ArtifactBundle {
     pub immutable: bool,
     pub artifacts: Vec<ArtifactEntry>,
     pub bundle_hash: String,
+    #[serde(default)]
+    pub bundle_signing_mode: Option<String>,
+    #[serde(default)]
+    pub bundle_signature: Option<String>,
 }

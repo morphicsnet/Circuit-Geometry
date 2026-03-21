@@ -27,6 +27,8 @@ pub fn execute_batch(run_id: &str, trace_id: &str) -> Result<ArtifactBundle, Str
         immutable: true,
         artifacts: vec![artifact],
         bundle_hash: String::new(),
+        bundle_signing_mode: None,
+        bundle_signature: None,
     };
     bundle.bundle_hash = compute_bundle_hash(&bundle)?;
     Ok(bundle)

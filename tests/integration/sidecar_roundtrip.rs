@@ -11,7 +11,7 @@ fn sidecar_roundtrip_phase2() {
     sidecar
         .start_trace(
             "trace-integration-1",
-            "mock",
+            "transformers",
             "gpt2-small",
             "factual_retrieval.v1",
             "run-integration-1",
@@ -41,7 +41,7 @@ fn sidecar_abort_cleans_active_trace() {
     sidecar
         .start_trace(
             "trace-abort-1",
-            "mock",
+            "transformers",
             "gpt2-small",
             "factual_retrieval.v1",
             "run-abort-1",

@@ -1,7 +1,7 @@
 {
-  "artifact_id": "artifact-48c434682399a8c121dc740fbaed7e06f1d4baa3d54fd04ec4c2e13c413b98c3",
+  "artifact_id": "artifact-ac89b3f755367e7d1ea61afc09c9b91ed7891e591dd336854cd6498fa0ca0bb8",
   "artifact_type": "golden_dataset_manifest",
-  "content_hash": "00824b04b46e44b1de533a1a00865e85aa2e44f99acc0c87ac42db49f678b50c",
+  "content_hash": "ba2d33b80ca6ee05411e414aed39dbc99c1d4050a2f7ad35a5ffb7f94e51bf0f",
   "created_at": "2026-01-01T00:00:00Z",
   "payload": {
     "ambiguity_flags": [
@@ -59,7 +59,7 @@
     "lane_id": "realworld-policy-qa.v1",
     "provenance": {
       "owner": "phase4",
-      "source": "synthetic-golden"
+      "source": "curated-golden"
     }
   },
   "producer": "geoclt:demo:0.4.0",

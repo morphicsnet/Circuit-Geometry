@@ -16,6 +16,23 @@ def test_receipt_smoke():
     }
 
 
+def test_receipt_auth_identity_and_signature(monkeypatch):
+    monkeypatch.setenv("GEOCLT_BUNDLE_SIGNING", "hmac")
+    monkeypatch.setenv("GEOCLT_BUNDLE_SIGNING_SECRET", "test-secret")
+    out = emit_decision_receipt(
+        run_id="run-auth",
+        caller_id="token-authenticated",
+        auth_policy_version="auth.v1",
+        auth_result="passed",
+    )
+    assert out["caller_id"] == "token-authenticated"
+    assert out["auth_policy_version"] == "auth.v1"
+    assert out["auth_result"] == "passed"
+    assert out["signing_mode"] == "hmac"
+    assert out["signature_verified"] is True
+    assert isinstance(out["signature"], str) and len(out["signature"]) == 64
+
+
 def test_receipt_persistence_is_immutable(tmp_path):
     receipt = emit_decision_receipt(run_id="run-immutable")
     target = tmp_path / "receipt.json"

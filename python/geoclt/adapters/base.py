@@ -39,5 +39,13 @@ class AdapterBase(ABC):
     def remove_hooks(self) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    def infer_tokens(self, prompt: str) -> list[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def infer_logits_hash(self, prompt: str) -> str:
+        raise NotImplementedError
+
     def intervene(self, _trace_id: str, _patch: dict[str, Any]) -> dict[str, Any]:
         return {"status": "unsupported"}

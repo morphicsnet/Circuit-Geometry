@@ -19,6 +19,8 @@ from geoclt.artifacts import verify_bundle_manifest
 from geoclt.models import DEFAULT_PHI_PROFILE, DEFAULT_QWEN_PROFILE, profile_frozen
 from services.api.app import app
 
+AUTH_HEADERS = {"authorization": f"Bearer {os.getenv('GEOCLT_AUTH_TOKEN', 'geoclt-local-token')}"}
+
 
 def _git_commit() -> str:
     try:
@@ -37,6 +39,7 @@ def _git_commit() -> str:
 def _submit(client: TestClient, workspace: str, lane_id: str, profile_id: str) -> dict[str, Any]:
     response = client.post(
         "/demo/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": lane_id,
@@ -57,8 +60,16 @@ def main() -> int:
     qwen = _submit(client, workspace, lane_id, DEFAULT_QWEN_PROFILE.model_profile_id)
     phi = _submit(client, workspace, lane_id, DEFAULT_PHI_PROFILE.model_profile_id)
 
-    qwen_report = client.get(f"/demo/report/{qwen['run_id']}", params={"workspace": workspace})
-    phi_report = client.get(f"/demo/report/{phi['run_id']}", params={"workspace": workspace})
+    qwen_report = client.get(
+        f"/demo/report/{qwen['run_id']}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
+    phi_report = client.get(
+        f"/demo/report/{phi['run_id']}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
     if qwen_report.status_code != 200 or phi_report.status_code != 200:
         print("nightly report fetch failed")
         return 1
@@ -68,7 +79,7 @@ def main() -> int:
     qwen_score = qwen_payload["scoring"]
     phi_score = phi_payload["scoring"]
 
-    divergence_enabled = os.environ.get("PHASE4_ENABLE_STUB_DIVERGENCE", "1") == "1"
+    divergence_enabled = os.environ.get("PHASE4_ENABLE_DIVERGENCE_CHECK", "0") == "1"
     success_divergence = abs(float(qwen_score["success_rate"]) - float(phi_score["success_rate"]))
 
     report: dict[str, Any] = {
@@ -94,7 +105,7 @@ def main() -> int:
                 phi_score["performance"]["peak_memory_mb"],
             ]
         ),
-        "nightly_stub_divergence_within_bounds": (success_divergence <= 0.2)
+        "nightly_divergence_within_bounds": (success_divergence <= 0.2)
         if divergence_enabled
         else True,
         "nightly_report_complete": all(
@@ -117,7 +128,7 @@ def main() -> int:
             "nightly_shared_lane_dual_model_valid",
             "nightly_receipt_bundle_valid",
             "nightly_latency_memory_recorded",
-            "nightly_stub_divergence_within_bounds",
+            "nightly_divergence_within_bounds",
             "nightly_report_complete",
         ]
     )

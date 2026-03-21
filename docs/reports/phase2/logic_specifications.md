@@ -55,7 +55,7 @@ Let:
 
 ## 6. Signal Dependencies
 Primary signals in `phase2_gate_report.json`:
-- `mock_roundtrip`
+- `real_sidecar_roundtrip`
 - `real_adapter_conformance`
 - `passive_non_perturbation.*`
 - `canonical_serialization.*`

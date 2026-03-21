@@ -24,6 +24,7 @@ from .benchmark import (
     evaluate_falsifiers,
 )
 from .profiles import BenchmarkLaneConfig
+from .real_pipeline import run_real_pipeline
 from .receipts import emit_decision_receipt
 
 
@@ -149,14 +150,24 @@ class Workspace:
         artifacts_dir = run_dir / "artifacts"
         artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-        score_seed = input_signature
-        intervention_faithfulness = self._deterministic_score(
-            f"{score_seed}:intervention", 0.14, 0.24
+        real_output = run_real_pipeline(
+            model_id=model_id,
+            lane_id=lane.lane_id,
+            behavior_id=lane.behavior_id,
         )
-        synergy_score_max = self._deterministic_score(f"{score_seed}:synergy", 0.06, 0.16)
-        chart_stability = self._deterministic_score(f"{score_seed}:chart", 0.72, 0.96)
-        transport_coherence = self._deterministic_score(f"{score_seed}:transport", 0.72, 0.96)
-        geodesic_deviation = self._deterministic_score(f"{score_seed}:geodesic", 0.02, 0.25)
+        intervention_faithfulness = real_output.intervention_faithfulness
+        synergy_score_max = real_output.synergy_score_max
+        chart_stability = real_output.chart_stability
+        transport_coherence = real_output.transport_coherence
+        geodesic_deviation = real_output.geodesic_deviation
+        baseline_scores = real_output.baseline_scores
+        candidate_events = real_output.candidate_events
+        pipeline_mode = "real-transformers"
+        backend_type = real_output.backend
+        pipeline_prompt = real_output.prompt
+        token_count = real_output.token_count
+        model_id = real_output.model_id
+        self.metadata["real_mode"] = True
 
         admission = evaluate_admission(
             lane=lane,
@@ -166,12 +177,6 @@ class Workspace:
             transport_coherence=transport_coherence,
         )
 
-        baseline_scores = {
-            "single_sae": self._deterministic_score(f"{score_seed}:single_sae", 0.07, 0.16),
-            "ensemble_sae": self._deterministic_score(f"{score_seed}:ensemble_sae", 0.08, 0.18),
-            "pairwise_graph": self._deterministic_score(f"{score_seed}:pairwise_graph", 0.08, 0.17),
-            "geometry_free": self._deterministic_score(f"{score_seed}:geometry_free", 0.08, 0.19),
-        }
         baseline_report = compare_baselines(
             intervention_faithfulness=intervention_faithfulness,
             baseline_scores=baseline_scores,
@@ -192,23 +197,6 @@ class Workspace:
             beats_baseline=baseline_report["beats_baseline"],
             falsifiers=falsifiers,
         )
-
-        candidate_events = [
-            {
-                "event_id": self._stable_id("event", input_signature, "1"),
-                "participant_set": ["sae:f123", "head:5:3", "mlp:6:17"],
-                "participant_types": ["sae", "attention_head", "mlp_gate"],
-                "causal_weight": round(intervention_faithfulness * 0.85, 4),
-                "reliability_score": round(chart_stability * 0.88, 4),
-            },
-            {
-                "event_id": self._stable_id("event", input_signature, "2"),
-                "participant_set": ["sae:f208", "head:6:2", "mlp:6:31"],
-                "participant_types": ["sae", "attention_head", "mlp_gate"],
-                "causal_weight": round(intervention_faithfulness * 0.72, 4),
-                "reliability_score": round(chart_stability * 0.79, 4),
-            },
-        ]
 
         producer = "geoclt:workspace:0.2.0"
         artifact_created_at = "2026-01-01T00:00:00Z"
@@ -309,6 +297,8 @@ class Workspace:
                 "chart_count": 4,
                 "overlap_score": round(chart_stability, 4),
                 "profile": self.metadata.get("atlas_profile", lane.behavior_id),
+                "pipeline_mode": pipeline_mode,
+                "backend_type": backend_type,
             },
             "transport_diagnostics": {
                 "lane_id": lane.lane_id,
@@ -316,16 +306,21 @@ class Workspace:
                 "distortion": round(max(0.0, 1.0 - transport_coherence), 4),
                 "coherence": round(transport_coherence, 4),
                 "geodesic_deviation": round(geodesic_deviation, 4),
+                "pipeline_mode": pipeline_mode,
+                "backend_type": backend_type,
             },
             "candidate_event_table": {
                 "lane_id": lane.lane_id,
                 "candidate_count": len(candidate_events),
                 "events": candidate_events,
+                "pipeline_mode": pipeline_mode,
+                "backend_type": backend_type,
             },
             "admitted_hyperpath_table": {
                 "lane_id": lane.lane_id,
                 "admitted_count": len(admitted_hyperpaths),
                 "hyperpaths": admitted_hyperpaths,
+                "pipeline_mode": pipeline_mode,
             },
             "falsifier_sheet": {
                 "lane_id": lane.lane_id,
@@ -334,6 +329,10 @@ class Workspace:
                 "baseline_report": baseline_report,
                 "conformance_class": conformance,
                 "benchmark_result": benchmark_result,
+                "pipeline_mode": pipeline_mode,
+                "backend_type": backend_type,
+                "prompt_hash": stable_hash(pipeline_prompt) if pipeline_prompt else None,
+                "token_count": token_count,
             },
         }
 
@@ -386,6 +385,16 @@ class Workspace:
             )
             connection.commit()
 
+        run_metadata = dict(self.metadata)
+        run_metadata.update(
+            {
+                "pipeline_mode": pipeline_mode,
+                "backend_type": backend_type,
+                "token_count": token_count,
+                "real_mode_enabled": True,
+            }
+        )
+
         return {
             "run_id": run_id,
             "lane_id": lane.lane_id,
@@ -398,7 +407,7 @@ class Workspace:
             "conformance_class": conformance,
             "artifact_bundle_hash": bundle_hash,
             "artifact_paths": artifact_paths,
-            "metadata": self.metadata,
+            "metadata": run_metadata,
         }
 
     def export_report(self, run_id: str, path: str | Path | None = None) -> dict[str, Any]:

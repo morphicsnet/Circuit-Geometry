@@ -56,6 +56,7 @@ def run_demo_lane(
     scorecard: dict[str, Any],
     trace_id: str,
     run_id: str,
+    caller_id: str | None = None,
 ) -> dict[str, Any]:
     items = dataset_manifest["payload"]["items"]
     outputs: list[dict[str, Any]] = []
@@ -95,6 +96,7 @@ def run_demo_lane(
             policy_clauses_triggered=[],
             geometry_anomaly_flags=[],
             chart_instability_flags=[],
+            caller_id=caller_id,
         )
         receipts.append(receipt)
 

@@ -10,7 +10,7 @@ REPORT_PATH = REPO_ROOT / "outputs" / "phase2_gate_report.json"
 
 REQUIRED_BOOLEAN_PATHS = [
     "overall_pass",
-    "mock_roundtrip",
+    "real_sidecar_roundtrip",
     "real_adapter_conformance",
     "passive_non_perturbation.token_parity",
     "passive_non_perturbation.logits_hash_parity",

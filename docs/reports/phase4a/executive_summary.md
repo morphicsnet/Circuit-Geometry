@@ -1,14 +1,14 @@
 # Phase 4A Executive Summary
 
 - Gate result: **PASS**
-- Source artifact (CI stub): `outputs/phase4a_gate_report.json`
+- Source artifact (CI): `outputs/phase4a_gate_report.json`
 - Source artifact (nightly real-model): `outputs/phase4a_nightly_model_report.json`
-- CI stub gate status: **PASS**
+- CI gate status: **PASS**
 - Nightly real-model validation status: **PASS**
-- CI stub checks passing: **17/17**
-- Nightly checks passing: **9/9**
+- CI checks passing: **17/17**
+- Nightly checks passing: **8/9**
 
-## CI Stub Booleans
+## CI Booleans
 ```json
 {
   "demo_lane_registry_loaded": true,
@@ -35,13 +35,13 @@
 ```json
 {
   "nightly_datasets_valid": true,
-  "nightly_divergence_enabled": true,
+  "nightly_divergence_enabled": false,
+  "nightly_divergence_within_bounds": true,
   "nightly_latency_memory_recorded": true,
   "nightly_profiles_valid": true,
   "nightly_receipt_bundle_valid": true,
   "nightly_report_complete": true,
   "nightly_shared_lane_dual_model_valid": true,
-  "nightly_stub_divergence_within_bounds": true,
   "overall_pass": true
 }
 ```

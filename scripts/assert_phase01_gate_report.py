@@ -11,6 +11,12 @@ PHASE0_REQUIRED = [
     "positive_fixture_conformant",
     "positive_fixture_beats_baseline",
     "negative_fixture_rejected_with_falsifier",
+    "real_positive_case_conformant",
+    "real_positive_case_beats_baseline",
+    "real_positive_case_admission_passed",
+    "real_higher_order_candidate_present",
+    "real_admitted_hyperpath_present",
+    "real_backend_type_valid",
 ]
 
 PHASE1_REQUIRED = [
@@ -21,6 +27,8 @@ PHASE1_REQUIRED = [
     "run_inspect_export_load_roundtrip",
     "determinism_endpoint_consistent",
     "bundle_hash_stable_across_reruns",
+    "real_pipeline_used",
+    "non_stub_backend_used",
 ]
 
 

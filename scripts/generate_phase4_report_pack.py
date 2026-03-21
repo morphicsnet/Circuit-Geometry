@@ -52,14 +52,14 @@ def _render_phase4a_summary(gate: dict, nightly: dict | None) -> str:
     return f"""# Phase 4A Executive Summary
 
 - Gate result: **{'PASS' if gate.get('overall_pass') else 'FAIL'}**
-- Source artifact (CI stub): `outputs/phase4a_gate_report.json`
+- Source artifact (CI): `outputs/phase4a_gate_report.json`
 - Source artifact (nightly real-model): `outputs/phase4a_nightly_model_report.json`
-- CI stub gate status: **{'PASS' if gate.get('overall_pass') else 'FAIL'}**
+- CI gate status: **{'PASS' if gate.get('overall_pass') else 'FAIL'}**
 - Nightly real-model validation status: **{nightly_status}**
-- CI stub checks passing: **{gate_passed}/{len(gate_checks)}**
+- CI checks passing: **{gate_passed}/{len(gate_checks)}**
 - Nightly checks passing: **{nightly_passed}/{nightly_total}**
 
-## CI Stub Booleans
+## CI Booleans
 ```json
 {json.dumps({k: v for k, v in gate.items() if isinstance(v, bool)}, indent=2, sort_keys=True)}
 ```

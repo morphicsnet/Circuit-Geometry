@@ -4,16 +4,16 @@ from .base import ModelProfile, ModelRunnerBase
 
 
 DEFAULT_PHI_PROFILE = ModelProfile(
-    model_profile_id="profile-phi4-mini-v1",
-    model_id="Phi-4-mini",
-    tokenizer_version="phi4-tokenizer-v1",
-    chat_template_version="phi4-chat-v1",
-    precision_mode="int8",
-    quantization="int8",
-    max_context=8192,
-    decoding={"temperature": 0.0, "top_p": 1.0, "max_tokens": 512},
-    structured_output_mode="json_schema",
-    runtime_backend="stub-transformers",
+    model_profile_id="profile-flan-t5-base-v1",
+    model_id="google/flan-t5-base",
+    tokenizer_version="flan-t5-base-tokenizer-v1",
+    chat_template_version="flan-t5-base-prompt-v1",
+    precision_mode="fp32",
+    quantization="none",
+    max_context=2048,
+    decoding={"temperature": 0.0, "top_p": 1.0, "max_tokens": 32},
+    structured_output_mode="line_protocol",
+    runtime_backend="hf-transformers-seq2seq",
     seed_policy="fixed:42",
 )
 

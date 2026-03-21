@@ -1,4 +1,7 @@
 use geoclt_schema::artifact::{ArtifactBundle, ArtifactEntry};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
+use std::env;
 
 use crate::canonicalize::{artifact_id, content_hash};
 use crate::compatibility::check_bundle_compatibility;
@@ -42,6 +45,27 @@ pub fn validate_artifact_bundle(
     if recomputed != bundle.bundle_hash {
         return Err("bundle hash mismatch".to_string());
     }
+    validate_bundle_signature(bundle)?;
+    Ok(())
+}
+
+fn validate_bundle_signature(bundle: &ArtifactBundle) -> Result<(), String> {
+    let mode = env::var("GEOCLT_BUNDLE_SIGNING").unwrap_or_else(|_| "off".to_string());
+    if mode != "hmac" {
+        return Ok(());
+    }
+    let Some(signature) = bundle.bundle_signature.as_ref() else {
+        return Err("missing bundle signature".to_string());
+    };
+    let secret =
+        env::var("GEOCLT_BUNDLE_SIGNING_SECRET").unwrap_or_else(|_| "geoclt-signing-secret".to_string());
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes())
+        .map_err(|error| format!("failed to init hmac: {error}"))?;
+    mac.update(bundle.bundle_hash.as_bytes());
+    let expected = hex::encode(mac.finalize().into_bytes());
+    if &expected != signature {
+        return Err("bundle signature mismatch".to_string());
+    }
     Ok(())
 }
 
@@ -59,7 +83,7 @@ mod tests {
                 artifact_id: String::new(),
                 artifact_type: "event_record".to_string(),
                 schema_version: 2,
-                producer: "geoclt:mock-adapter:0.2.0".to_string(),
+                producer: "geoclt:transformers-adapter:0.2.0".to_string(),
                 trace_id: "trace-1".to_string(),
                 run_id: "run-1".to_string(),
                 content_hash: String::new(),
@@ -84,7 +108,7 @@ mod tests {
                 artifact_id: String::new(),
                 artifact_type: "event_record".to_string(),
                 schema_version: 2,
-                producer: "geoclt:mock-adapter:0.2.0".to_string(),
+                producer: "geoclt:transformers-adapter:0.2.0".to_string(),
                 trace_id: "trace-1".to_string(),
                 run_id: "run-1".to_string(),
                 content_hash: String::new(),
@@ -105,6 +129,8 @@ mod tests {
             immutable: true,
             artifacts: vec![artifact],
             bundle_hash: String::new(),
+            bundle_signing_mode: None,
+            bundle_signature: None,
         };
         bundle.bundle_hash = compute_bundle_hash(&bundle).expect("bundle hash");
         assert!(validate_artifact_bundle(&registry, &bundle).is_ok());

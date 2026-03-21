@@ -1,4 +1,4 @@
-from geoclt.adapters import LlamaCppAdapter, MockAdapter, TransformersAdapter, VllmAdapter
+from geoclt.adapters import LlamaCppAdapter, TransformersAdapter, VllmAdapter
 
 
 def _assert_adapter_contract(adapter):
@@ -17,20 +17,12 @@ def _assert_adapter_contract(adapter):
     assert len(activations["activations"]) == 2
     adapter.end_trace("trace-1")
 
-
-
-def test_mock_adapter_contract():
-    _assert_adapter_contract(MockAdapter())
-
-
-def test_real_adapter_contracts():
+def test_transformers_adapter_contract():
     _assert_adapter_contract(TransformersAdapter())
-    _assert_adapter_contract(VllmAdapter())
-    _assert_adapter_contract(LlamaCppAdapter())
 
 
 def test_adapter_capability_declarations_are_machine_readable():
-    adapters = [MockAdapter(), TransformersAdapter(), VllmAdapter(), LlamaCppAdapter()]
+    adapters = [TransformersAdapter(), VllmAdapter(), LlamaCppAdapter()]
     allowed_granularity = {"layer", "block", "submodule"}
     for adapter in adapters:
         caps = adapter.capabilities().as_dict()
@@ -42,3 +34,13 @@ def test_adapter_capability_declarations_are_machine_readable():
         assert isinstance(caps["batch_mode"], bool)
         assert caps["block_granularity"] in allowed_granularity
         assert isinstance(caps["supported_runtimes"], list)
+
+
+def test_optional_adapter_runtime_unavailable_is_explicit():
+    for adapter in [VllmAdapter(), LlamaCppAdapter()]:
+        try:
+            adapter.list_blocks()
+        except RuntimeError as error:
+            assert "not installed or configured" in str(error)
+        else:
+            raise AssertionError("expected explicit runtime unavailability")

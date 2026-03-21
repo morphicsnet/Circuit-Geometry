@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import hmac
 from hashlib import sha256
+import os
 from pathlib import Path
 from typing import Any
 
@@ -29,11 +31,27 @@ def canonical_receipt_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "fallback_selected": payload["fallback_selected"],
         "bundle_hash": payload["bundle_hash"],
         "producer": payload["producer"],
+        "caller_id": payload.get("caller_id"),
+        "auth_policy_version": payload.get("auth_policy_version"),
+        "auth_result": payload.get("auth_result"),
     }
 
 
 def compute_receipt_hash(payload: dict[str, Any]) -> str:
     return stable_hash(canonical_receipt_payload(payload))
+
+
+def _signing_mode() -> str:
+    return os.getenv("GEOCLT_BUNDLE_SIGNING", "off").strip().lower()
+
+
+def _signing_secret() -> str:
+    return os.getenv("GEOCLT_BUNDLE_SIGNING_SECRET", "geoclt-signing-secret")
+
+
+def _hmac_signature(value: str) -> str:
+    digest = hmac.new(_signing_secret().encode("utf-8"), value.encode("utf-8"), sha256)
+    return digest.hexdigest()
 
 
 def persist_receipt(path: str | Path, receipt: dict[str, Any]) -> dict[str, Any]:
@@ -51,7 +69,7 @@ def persist_receipt(path: str | Path, receipt: dict[str, Any]) -> dict[str, Any]
 
 def emit_decision_receipt(
     *,
-    run_id: str = "run-placeholder",
+    run_id: str = "run-default",
     trace_id: str | None = None,
     model_id: str = "gpt2-small",
     lane_id: str = "claims-triage.v1",
@@ -65,6 +83,9 @@ def emit_decision_receipt(
     falsifiers_checked: list[str] | None = None,
     fallback_selected: str | None = None,
     bundle_hash: str | None = None,
+    caller_id: str | None = None,
+    auth_policy_version: str = "auth.v1",
+    auth_result: str = "passed",
     active_mechanism_class_ids: list[str] | None = None,
     provisional_mechanism_class_ids: list[str] | None = None,
     policy_clauses_triggered: list[str] | None = None,
@@ -90,6 +111,9 @@ def emit_decision_receipt(
         "fallback_selected": fallback_selected,
         "bundle_hash": bundle_hash or _hash_text(f"{run_id}:bundle"),
         "producer": "geoclt:runtime:0.3.0",
+        "caller_id": caller_id,
+        "auth_policy_version": auth_policy_version,
+        "auth_result": auth_result,
     }
 
     receipt_hash = compute_receipt_hash(payload_core)
@@ -125,5 +149,16 @@ def emit_decision_receipt(
         "mechanism_classes_used": payload_core["mechanism_classes_used"],
         "evaluation_results": payload_core["evaluation_results"],
         "action_selected": payload_core["action_selected"],
+        "caller_id": payload_core["caller_id"],
+        "auth_policy_version": payload_core["auth_policy_version"],
+        "auth_result": payload_core["auth_result"],
     }
+    if _signing_mode() == "hmac":
+        full_payload["signature"] = _hmac_signature(receipt_hash)
+        full_payload["signature_verified"] = True
+        full_payload["signing_mode"] = "hmac"
+    else:
+        full_payload["signature"] = None
+        full_payload["signature_verified"] = False
+        full_payload["signing_mode"] = "off"
     return full_payload

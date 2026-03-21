@@ -23,8 +23,7 @@ python3 scripts/check_no_placeholders.py
 python3 scripts/check_determinism.py
 python3 scripts/generate_phase_gate_report.py
 python3 scripts/assert_phase01_gate_report.py
-PYTHONPATH=python python3 scripts/generate_phase2_gate_report.py
-python3 scripts/assert_phase2_gate_report.py
+bash scripts/run_phase2_gate.sh
 python3 scripts/check_lane_registry_immutability.py
 PYTHONPATH=python python3 scripts/generate_phase3a_gate_report.py
 python3 scripts/assert_phase3a_gate_report.py

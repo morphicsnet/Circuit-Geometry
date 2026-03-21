@@ -6,8 +6,8 @@ Gate formula:
 
 Where:
 - `I` = mechanism identity stability and determinism
-- `C` = cluster determinism and family assignment validity
-- `R` = receipt schema/completeness/hash/linkage validity
+- `C` = cluster determinism and family assignment validity (including high-cardinality fixture)
+- `R` = receipt schema/completeness/hash/linkage + immutability validity
 - `L` = lane registry validity + immutability + deterministic policy action
 
 Identity formula:

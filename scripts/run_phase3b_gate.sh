@@ -4,6 +4,7 @@ set -euo pipefail
 PYTHONPATH=python python3 -m pytest \
   python/tests/test_api_phase3.py \
   python/tests/test_differential.py \
+  python/tests/test_phase3_report_pack.py \
   python/tests/test_reports.py \
   -q
 

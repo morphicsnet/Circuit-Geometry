@@ -6,14 +6,24 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CHECK_PATHS = [
-    REPO_ROOT / "python" / "tests",
+    REPO_ROOT / "python" / "geoclt",
+    REPO_ROOT / "services" / "api",
+    REPO_ROOT / "scripts",
+    REPO_ROOT / ".github" / "workflows",
     REPO_ROOT / "tests" / "integration",
+    REPO_ROOT / "python" / "tests",
     REPO_ROOT / "crates" / "geoclt-benchmark" / "tests",
 ]
 PATTERNS = [
     re.compile(r"\bplaceholder\b", re.IGNORECASE),
     re.compile(r"assert!\s*\(\s*true\s*\)"),
 ]
+SELF_PATH = Path(__file__).resolve()
+EXCLUDED_PATHS = {
+    Path("scripts/check_no_placeholders.py"),
+    Path("scripts/generate_synthetic_inventory.py"),
+    Path("scripts/generate_release_readiness_report.py"),
+}
 
 
 def main() -> int:
@@ -24,12 +34,15 @@ def main() -> int:
         for path in base.rglob("*"):
             if not path.is_file():
                 continue
-            if path.suffix not in {".py", ".rs"}:
+            rel = path.relative_to(REPO_ROOT)
+            if path.resolve() == SELF_PATH or rel in EXCLUDED_PATHS:
+                continue
+            if path.suffix not in {".py", ".rs", ".sh", ".yml", ".yaml"}:
                 continue
             text = path.read_text(encoding="utf-8")
             for pattern in PATTERNS:
                 if pattern.search(text):
-                    violations.append(f"{path.relative_to(REPO_ROOT)} matches {pattern.pattern}")
+                    violations.append(f"{rel} matches {pattern.pattern}")
 
     if violations:
         print("placeholder guard failed:")

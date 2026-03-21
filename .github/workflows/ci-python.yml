@@ -9,17 +9,30 @@ jobs:
         with:
           python-version: "3.11"
       - uses: dtolnay/rust-toolchain@stable
-      - run: pip install maturin ruff mypy pytest fastapi httpx jsonschema
+      - run: pip install maturin ruff mypy pytest fastapi httpx jsonschema torch transformers grpcio grpcio-tools
+      - run: |
+          python - <<'PY'
+          from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
+          AutoTokenizer.from_pretrained("gpt2")
+          AutoModelForCausalLM.from_pretrained("gpt2")
+          AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoTokenizer.from_pretrained("google/flan-t5-base")
+          AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+          print("model cache warm")
+          PY
       - run: maturin develop
+      - run: python3 scripts/generate_synthetic_inventory.py
       - run: PYTHONPATH=python pytest python/tests -q
       - run: bash scripts/run_phase01_gate.sh
       - run: bash scripts/validate_artifacts.sh
+      - run: python3 scripts/generate_desynthetic_status.py
       - run: bash scripts/run_phase3_report_pack.sh
       - run: ruff check python
       - run: mypy python/geoclt
       - uses: actions/upload-artifact@v4
         with:
-          name: phase-gate-evidence
+          name: phase-gate-evidence-pr-stub
           path: |
             outputs/determinism_evidence.json
             outputs/phase_gate_report.json
@@ -27,10 +40,17 @@ jobs:
             outputs/phase3a_gate_report.json
             outputs/phase3b_gate_report.json
             outputs/phase4a_gate_report.json
-            outputs/phase4a_nightly_model_report.json
             outputs/phase4b_gate_report.json
+            outputs/desynthetic_status.json
             docs/reports/phase3a
             docs/reports/phase3b
             docs/reports/phase4a
             docs/reports/phase4b
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase-gate-evidence-nightly-real
+          path: |
+            outputs/phase4a_nightly_model_report.json
+            docs/reports/phase4a
           if-no-files-found: error

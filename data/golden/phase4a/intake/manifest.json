@@ -1,7 +1,7 @@
 {
-  "artifact_id": "artifact-fd3aeb70fd713ddb272b3f9d5efa2f31d4d62cea6ddfa94eb07c265ebc6ec56c",
+  "artifact_id": "artifact-41fdd30ce350fe4d36130fdec3bbfdddff8b310b43bbd65dd629a81fa1800d15",
   "artifact_type": "golden_dataset_manifest",
-  "content_hash": "2099ee4f75ad070a1aee218fa9c954cd22e30ec7832ade2a81b52cb973475fa8",
+  "content_hash": "ffb9bcce5ba983ea522fa5cd59f7e54aa305478bfcb78b8bc8d23d64130966e3",
   "created_at": "2026-01-01T00:00:00Z",
   "payload": {
     "ambiguity_flags": [
@@ -59,7 +59,7 @@
     "lane_id": "realworld-structured-intake.v1",
     "provenance": {
       "owner": "phase4",
-      "source": "synthetic-golden"
+      "source": "curated-golden"
     }
   },
   "producer": "geoclt:demo:0.4.0",

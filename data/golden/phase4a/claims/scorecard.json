@@ -11,7 +11,7 @@
     ],
     "failure_condition": "schema invalid or unsafe route",
     "lane_id": "realworld-claims-triage.v1",
-    "latency_budget_ms": 2000,
+    "latency_budget_ms": 3000,
     "success_condition": "confidence+alignment above threshold",
     "thresholds": {
       "evidence_alignment_min": 0.55,

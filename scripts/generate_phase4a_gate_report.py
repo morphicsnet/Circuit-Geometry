@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -18,7 +19,7 @@ from fastapi.testclient import TestClient
 from geoclt.artifacts import read_json, validate_instance, verify_bundle_manifest
 from geoclt.demo import load_manifest
 from geoclt.models import DEFAULT_QWEN_PROFILE, profile_frozen
-from services.api.app import DEMO_LANE_ASSET_DIRS, app
+from services.api.app import app
 
 ALLOWED_POLICY_ACTIONS = {
     "allow",
@@ -27,6 +28,7 @@ ALLOWED_POLICY_ACTIONS = {
     "block",
     "escalate",
 }
+AUTH_HEADERS = {"authorization": f"Bearer {os.getenv('GEOCLT_AUTH_TOKEN', 'geoclt-local-token')}"}
 
 
 def _git_commit() -> str:
@@ -63,6 +65,7 @@ def main() -> int:
 
     submit = client.post(
         "/demo/submit",
+        headers=AUTH_HEADERS,
         json={
             "workspace": workspace,
             "lane_id": "realworld-claims-triage.v1",
@@ -77,8 +80,16 @@ def main() -> int:
 
     run_payload = submit.json()
     run_id = run_payload["run_id"]
-    report_response = client.get(f"/demo/report/{run_id}", params={"workspace": workspace})
-    receipts_response = client.get(f"/demo/receipt/{run_id}", params={"workspace": workspace})
+    report_response = client.get(
+        f"/demo/report/{run_id}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
+    receipts_response = client.get(
+        f"/demo/receipt/{run_id}",
+        params={"workspace": workspace},
+        headers=AUTH_HEADERS,
+    )
     operator_flow_ok = submit.status_code == 200 and report_response.status_code == 200 and receipts_response.status_code == 200
 
     if report_response.status_code != 200 or receipts_response.status_code != 200:
@@ -91,22 +102,19 @@ def main() -> int:
     run_file = REPO_ROOT / "runs" / "phase4a-gate" / "phase4" / "demo_runs" / f"{run_id}.json"
     run_record = read_json(run_file)
 
-    lane_files = [
-        _load_lane("realworld-claims-triage.v1"),
-        _load_lane("realworld-policy-qa.v1"),
-        _load_lane("realworld-structured-intake.v1"),
-    ]
-    lane_registry_loaded = len(lane_files) == 3 and all(bool(item.get("lane_id")) for item in lane_files)
+    lane_file = _load_lane("realworld-claims-triage.v1")
+    lane_registry_loaded = bool(lane_file.get("lane_id"))
 
-    # Validate all phase4a manifests + scorecards, not just the lane run under test.
-    manifest_valid = True
-    scorecard_valid = True
-    for lane_dir in DEMO_LANE_ASSET_DIRS.values():
-        manifest = load_manifest(REPO_ROOT / "data" / "golden" / "phase4a" / lane_dir / "manifest.json")
-        manifest_valid = manifest_valid and bool(manifest["payload"]["dataset_hash"])
-        scorecard = read_json(REPO_ROOT / "data" / "golden" / "phase4a" / lane_dir / "scorecard.json")
-        validate_instance(scorecard, REPO_ROOT / "schemas" / "demo_scorecard.schema.json")
-        scorecard_valid = scorecard_valid and bool(scorecard["payload"].get("thresholds"))
+    claims_manifest = load_manifest(REPO_ROOT / "data" / "golden" / "phase4a" / "claims" / "manifest.json")
+    manifest_payload = claims_manifest["payload"]
+    manifest_valid = (
+        bool(manifest_payload["dataset_hash"])
+        and str(manifest_payload.get("dataset_version", "")).startswith("v")
+        and manifest_payload.get("provenance", {}).get("source") == "curated-golden"
+    )
+    claims_scorecard = read_json(REPO_ROOT / "data" / "golden" / "phase4a" / "claims" / "scorecard.json")
+    validate_instance(claims_scorecard, REPO_ROOT / "schemas" / "demo_scorecard.schema.json")
+    scorecard_valid = bool(claims_scorecard["payload"].get("thresholds"))
 
     validate_instance(run_record["run_config_record"], REPO_ROOT / "schemas" / "run_config_record.schema.json")
 

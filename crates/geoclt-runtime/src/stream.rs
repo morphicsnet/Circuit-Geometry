@@ -9,7 +9,7 @@ pub fn execute_stream(run_id: &str, trace_id: &str, chunks: &[Vec<u8>]) -> Resul
     let mut sidecar = SidecarServer::new("geoclt:sidecar:0.2.0", registry);
     sidecar.start_trace(
         trace_id,
-        "mock",
+        "transformers",
         "gpt2-small",
         "factual_retrieval.v1",
         run_id,

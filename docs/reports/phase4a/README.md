@@ -9,7 +9,7 @@
 
 Generated from:
 
-- `outputs/phase4a_gate_report.json` (CI stub gate)
+- `outputs/phase4a_gate_report.json` (CI gate)
 - `outputs/phase4a_nightly_model_report.json` (nightly real-model validation)
 
 Refresh commands:

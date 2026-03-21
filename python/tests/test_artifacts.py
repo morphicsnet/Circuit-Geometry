@@ -57,7 +57,7 @@ def test_bundle_write_and_verify(tmp_path):
     artifact = build_artifact_entry(
         artifact_type="benchmark_result",
         schema_version=2,
-        producer="geoclt:mock-adapter:0.2.0",
+        producer="geoclt:transformers-adapter:0.2.0",
         trace_id="trace-1",
         run_id="run-1",
         payload={"score": 0.9},
@@ -82,3 +82,28 @@ def test_bundle_write_and_verify(tmp_path):
         artifact_id=artifact["artifact_id"],
     )
     assert written[0] == expected
+
+
+def test_bundle_signature_verification(monkeypatch):
+    monkeypatch.setenv("GEOCLT_BUNDLE_SIGNING", "hmac")
+    monkeypatch.setenv("GEOCLT_BUNDLE_SIGNING_SECRET", "test-secret")
+    artifact = build_artifact_entry(
+        artifact_type="benchmark_result",
+        schema_version=2,
+        producer="geoclt:transformers-adapter:0.2.0",
+        trace_id="trace-1",
+        run_id="run-1",
+        payload={"score": 0.9},
+        created_at="2026-01-01T00:00:00Z",
+    )
+    bundle = build_artifact_bundle(
+        run_id="run-1",
+        trace_id="trace-1",
+        producer="geoclt:sidecar:0.2.0",
+        artifacts=[artifact],
+        created_at="2026-01-01T00:00:00Z",
+    )
+    assert verify_bundle_manifest(bundle) is True
+    tampered = dict(bundle)
+    tampered["bundle_signature"] = "0" * 64
+    assert verify_bundle_manifest(tampered) is False

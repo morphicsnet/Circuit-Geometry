@@ -1,13 +1,13 @@
-from geoclt.adapters import MockAdapter
+from geoclt.adapters import TransformersAdapter
 from geoclt.sidecar import connect_sidecar
 
 
-def test_mock_adapter_fake_sidecar_roundtrip():
-    adapter = MockAdapter(model_id="gpt2-small")
+def test_transformers_adapter_real_sidecar_roundtrip():
+    adapter = TransformersAdapter(model_id="gpt2-small")
     sidecar = connect_sidecar()
 
-    trace_id = "trace-mock-1"
-    run_id = "run-mock-1"
+    trace_id = "trace-transformers-1"
+    run_id = "run-transformers-1"
     prompt = "how many moons does mars have"
 
     blocks = adapter.list_blocks()[:3]

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+import hmac
 from hashlib import sha256
+import os
 from pathlib import Path
 import re
 from typing import Any
@@ -67,6 +69,19 @@ def _utc_now() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def _signing_mode() -> str:
+    return os.getenv("GEOCLT_BUNDLE_SIGNING", "off").strip().lower()
+
+
+def _signing_secret() -> str:
+    return os.getenv("GEOCLT_BUNDLE_SIGNING_SECRET", "geoclt-signing-secret")
+
+
+def _bundle_signature(bundle_hash: str) -> str:
+    digest = hmac.new(_signing_secret().encode("utf-8"), bundle_hash.encode("utf-8"), sha256)
+    return digest.hexdigest()
+
+
 def _validate_producer(producer: str) -> None:
     if not PRODUCER_PATTERN.match(producer):
         raise ValueError(f"invalid producer format: {producer}")
@@ -121,15 +136,26 @@ def build_artifact_bundle(
         "artifacts": artifacts,
     }
     bundle["bundle_hash"] = stable_hash(bundle)
+    if _signing_mode() == "hmac":
+        bundle["bundle_signature"] = _bundle_signature(bundle["bundle_hash"])
+        bundle["bundle_signing_mode"] = "hmac"
     return bundle
 
 
 def verify_bundle_manifest(bundle: dict[str, Any]) -> bool:
     copied = dict(bundle)
     provided_hash = copied.pop("bundle_hash", None)
+    signature = copied.pop("bundle_signature", None)
+    signing_mode = copied.pop("bundle_signing_mode", "off")
     if provided_hash is None:
         return False
-    return stable_hash(copied) == provided_hash
+    if stable_hash(copied) != provided_hash:
+        return False
+    if signing_mode == "hmac":
+        if not isinstance(signature, str):
+            return False
+        return signature == _bundle_signature(provided_hash)
+    return True
 
 
 def write_bundle_to_store(bundle: dict[str, Any], store_root: str | Path) -> list[Path]:

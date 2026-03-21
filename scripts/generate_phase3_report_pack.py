@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from datetime import datetime, UTC
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORTS_ROOT = REPO_ROOT / "docs" / "reports"
@@ -20,10 +19,10 @@ def _write(path: Path, body: str) -> None:
 def _render_summary(phase_name: str, payload: dict, runner: str, assertion: str, output_name: str) -> str:
     checks = [key for key, value in payload.items() if isinstance(value, bool)]
     passed = sum(1 for key in checks if payload[key] is True)
-    stamp = datetime.now(UTC).isoformat()
+    source_hash = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return f"""# {phase_name} Executive Summary
 
-- Generated at: `{stamp}`
+- Source report digest: `{source_hash[:20]}...`
 - Gate result: **{'PASS' if payload.get('overall_pass') else 'FAIL'}**
 - Source artifact: `outputs/{output_name}`
 - Gate runner: `{runner}`

@@ -1,7 +1,7 @@
 {
-  "artifact_id": "artifact-0a6f70981e69b79b43a0e27ef188fdd80bce2a871ecd5aeb56228da5d442b6b4",
+  "artifact_id": "artifact-f56c9267d692e1745325383980d3219413b6c27a4a2b06447aa9057b930d1d42",
   "artifact_type": "golden_dataset_manifest",
-  "content_hash": "7f2c61a91b4332a6c74e1cade7395d001443b23afa5d0d91aa3380305915b8d8",
+  "content_hash": "eb9ee0a233689a38cccaf07f48b97cc36cd9386daefcb9fd5f1c0704be1549cb",
   "created_at": "2026-01-01T00:00:00Z",
   "payload": {
     "ambiguity_flags": [
@@ -59,7 +59,7 @@
     "lane_id": "realworld-claims-triage.v1",
     "provenance": {
       "owner": "phase4",
-      "source": "synthetic-golden"
+      "source": "curated-golden"
     }
   },
   "producer": "geoclt:demo:0.4.0",

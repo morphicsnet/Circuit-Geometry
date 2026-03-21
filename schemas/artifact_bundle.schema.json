@@ -30,6 +30,8 @@
         }
       }
     },
-    "bundle_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "bundle_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "bundle_signing_mode": {"type": "string", "enum": ["off", "hmac"]},
+    "bundle_signature": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
   }
 }

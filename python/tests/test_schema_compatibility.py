@@ -5,7 +5,7 @@ def _sample_artifact(version: int) -> dict:
     return build_artifact_entry(
         artifact_type="event_record",
         schema_version=version,
-        producer="geoclt:mock-adapter:0.2.0",
+        producer="geoclt:transformers-adapter:0.2.0",
         trace_id="trace-1",
         run_id="run-1",
         payload={"x": 1},

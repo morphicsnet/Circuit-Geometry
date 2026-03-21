@@ -11,7 +11,7 @@ PYTHON_SRC = REPO_ROOT / "python"
 if str(PYTHON_SRC) not in sys.path:
     sys.path.insert(0, str(PYTHON_SRC))
 
-from geoclt.adapters import LlamaCppAdapter, MockAdapter, TransformersAdapter, VllmAdapter
+from geoclt.adapters import LlamaCppAdapter, TransformersAdapter, VllmAdapter
 from geoclt.artifacts import derive_artifact_id, stable_hash
 from geoclt.sidecar import connect_sidecar
 
@@ -45,20 +45,21 @@ def main() -> int:
             "n_minus_2_rejected": (current - 2) < minimum,
         }
 
-    adapter = MockAdapter("gpt2-small")
-    real_adapters = [
-        TransformersAdapter("gpt2-small"),
-        VllmAdapter("gpt2-small"),
-        LlamaCppAdapter("gpt2-small"),
-    ]
+    adapter = TransformersAdapter("gpt2-small")
+    real_adapters = [adapter]
+    optional_adapters = [VllmAdapter("gpt2-small"), LlamaCppAdapter("gpt2-small")]
     sidecar = connect_sidecar()
+    prompt = "what is the capital of france"
+    blocks = adapter.list_blocks()[:3]
+    activations = adapter.capture_activations(prompt, blocks)
+    chunks = [json.dumps(item, sort_keys=True).encode("utf-8") for item in activations["activations"]]
     result = sidecar.stream_trace(
         trace_id="phase2-trace",
         adapter_id=adapter.capabilities().adapter_id,
         model_id="gpt2-small",
         lane_id="factual_retrieval.v1",
         run_id="phase2-run",
-        chunks=[b"a", b"b", b"c"],
+        chunks=chunks,
     )
     repeat_result = sidecar.stream_trace(
         trace_id="phase2-trace",
@@ -66,10 +67,9 @@ def main() -> int:
         model_id="gpt2-small",
         lane_id="factual_retrieval.v1",
         run_id="phase2-run",
-        chunks=[b"a", b"b", b"c"],
+        chunks=chunks,
     )
 
-    prompt = "what is the capital of france"
     tokens_before = adapter.infer_tokens(prompt)
     logits_before = adapter.infer_logits_hash(prompt)
     adapter.install_passive_hooks()
@@ -132,6 +132,22 @@ def main() -> int:
             }
         )
 
+    optional_adapter_checks: list[dict[str, Any]] = []
+    for real in optional_adapters:
+        caps = real.capabilities()
+        entry = {
+            "adapter_id": caps.adapter_id,
+            "capabilities_valid": bool(caps.supported_runtimes) and bool(caps.block_granularity),
+            "runtime_available": False,
+        }
+        try:
+            real.list_blocks()
+        except RuntimeError:
+            entry["runtime_available"] = False
+        else:
+            entry["runtime_available"] = True
+        optional_adapter_checks.append(entry)
+
     real_adapter_conformance = all(
         check["capabilities_valid"]
         and check["block_listing_nonempty"]
@@ -144,12 +160,13 @@ def main() -> int:
         "git_commit": _git_commit(),
         "schema_registry_version": registry["version"],
         "adapters_tested": [
-            adapter.capabilities().as_dict(),
             *(real.capabilities().as_dict() for real in real_adapters),
+            *(real.capabilities().as_dict() for real in optional_adapters),
         ],
-        "mock_roundtrip": bool(result.get("ok", False)),
+        "real_sidecar_roundtrip": bool(result.get("ok", False)),
         "real_adapter_conformance": real_adapter_conformance,
         "adapter_conformance_checks": adapter_checks,
+        "optional_adapter_checks": optional_adapter_checks,
         "passive_non_perturbation": {
             "token_parity": tokens_before == tokens_after,
             "logits_hash_parity": logits_before == logits_after,
@@ -178,7 +195,7 @@ def main() -> int:
 
     report["overall_pass"] = (
         registry["compatibility_policy"] == "strict_n_n_minus_1"
-        and report["mock_roundtrip"]
+        and report["real_sidecar_roundtrip"]
         and report["real_adapter_conformance"]
         and report["passive_non_perturbation"]["token_parity"]
         and report["passive_non_perturbation"]["logits_hash_parity"]

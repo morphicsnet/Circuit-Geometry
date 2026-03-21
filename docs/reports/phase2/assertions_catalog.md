@@ -22,7 +22,7 @@ Primary gate assertion script: `scripts/assert_phase2_gate_report.py`
 ### A2. Required Boolean Assertions
 These are explicitly enumerated in `REQUIRED_BOOLEAN_PATHS`:
 1. `overall_pass`
-2. `mock_roundtrip`
+2. `real_sidecar_roundtrip`
 3. `real_adapter_conformance`
 4. `passive_non_perturbation.token_parity`
 5. `passive_non_perturbation.logits_hash_parity`

@@ -78,6 +78,8 @@ mod tests {
                 payload: serde_json::json!({"ok": true}),
             }],
             bundle_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string(),
+            bundle_signing_mode: None,
+            bundle_signature: None,
         }
     }
 
@@ -124,6 +126,8 @@ mod tests {
                 },
             ],
             bundle_hash: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc".to_string(),
+            bundle_signing_mode: None,
+            bundle_signature: None,
         }
     }
 

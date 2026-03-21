@@ -28,5 +28,5 @@ Required booleans asserted from `outputs/phase4a_nightly_model_report.json`:
 - `nightly_shared_lane_dual_model_valid`
 - `nightly_receipt_bundle_valid`
 - `nightly_latency_memory_recorded`
-- `nightly_stub_divergence_within_bounds`
+- `nightly_divergence_within_bounds`
 - `nightly_report_complete`

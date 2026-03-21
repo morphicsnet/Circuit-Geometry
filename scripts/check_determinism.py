@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 import sys
@@ -14,6 +13,8 @@ from geoclt import BenchmarkLaneConfig, Workspace
 
 
 def parse_args() -> argparse.Namespace:
+    import argparse
+
     parser = argparse.ArgumentParser(description="Run deterministic benchmark rerun check.")
     parser.add_argument(
         "--workspace",
@@ -63,6 +64,9 @@ def main() -> int:
         "input_signature_equal": run_one["input_signature"] == run_two["input_signature"],
         "bundle_hash_equal": run_one["artifact_bundle_hash"] == run_two["artifact_bundle_hash"],
         "determinism": check,
+        "pipeline_mode": run_two["metadata"].get("pipeline_mode"),
+        "backend_type": run_two["metadata"].get("backend_type"),
+        "require_real": True,
     }
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,6 +76,8 @@ def main() -> int:
     if not payload["input_signature_equal"] or not payload["bundle_hash_equal"]:
         return 1
     if not check["is_deterministic"]:
+        return 1
+    if payload["backend_type"] != "transformers-real":
         return 1
     return 0
 

@@ -11,9 +11,9 @@ DEFAULT_MULTIMODAL_PROFILE = ModelProfile(
     precision_mode="fp16",
     quantization="none",
     max_context=16384,
-    decoding={"temperature": 0.0, "top_p": 1.0, "max_tokens": 512},
+    decoding={"temperature": 0.0, "top_p": 1.0, "max_tokens": 128},
     structured_output_mode="json_schema",
-    runtime_backend="stub-vl",
+    runtime_backend="unsupported-unconfigured-vl",
     seed_policy="fixed:42",
 )
 
@@ -21,3 +21,7 @@ DEFAULT_MULTIMODAL_PROFILE = ModelProfile(
 class MultimodalRunner(ModelRunnerBase):
     def __init__(self, profile: ModelProfile = DEFAULT_MULTIMODAL_PROFILE) -> None:
         super().__init__(profile)
+
+    def generate_structured_output(self, lane_id: str, payload: dict[str, object]) -> dict[str, object]:
+        _ = (lane_id, payload)
+        raise RuntimeError("multimodal runtime is not configured in this environment")

@@ -10,6 +10,7 @@ use geoclt_schema::hyperpath::HyperpathRecord;
 use geoclt_units::Score;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use std::env;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -307,6 +308,7 @@ fn default_lane(lane_id: String, behavior_id: String) -> BenchmarkLane {
 }
 
 fn main() -> Result<()> {
+    let model_mode = env::var("GEOCLT_MODEL_MODE").unwrap_or_else(|_| "real".to_string());
     let cli = Cli::parse();
     match cli.command {
         Commands::Version => {
@@ -338,6 +340,11 @@ fn main() -> Result<()> {
             let (lane, model_id, metrics, baselines) = if let Some(path) = fixture {
                 load_fixture(&path)?
             } else {
+                if model_mode == "real" {
+                    return Err(anyhow!(
+                        "benchmark requires --fixture when GEOCLT_MODEL_MODE=real; use GEOCLT_MODEL_MODE=fixture-replay for deterministic metric replay"
+                    ));
+                }
                 if intervention_faithfulness < 0.0
                     || synergy_score_max < 0.0
                     || chart_stability < 0.0

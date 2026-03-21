@@ -1,0 +1,35 @@
+name: nightly-phase4-models
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  phase4a-nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install fastapi httpx jsonschema pytest torch transformers grpcio grpcio-tools
+      - run: |
+          python - <<'PY'
+          from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
+          AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoTokenizer.from_pretrained("google/flan-t5-base")
+          AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+          print("nightly phase4 model cache warm")
+          PY
+      - run: PYTHONPATH=python python3 scripts/generate_phase4a_nightly_model_report.py
+      - run: python3 scripts/assert_phase4a_nightly_model_report.py
+      - run: python3 scripts/generate_phase4_report_pack.py --phase phase4a
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase4a-nightly-evidence
+          path: |
+            outputs/phase4a_nightly_model_report.json
+            docs/reports/phase4a
+          if-no-files-found: error

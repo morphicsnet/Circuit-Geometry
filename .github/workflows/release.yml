@@ -3,8 +3,47 @@ on:
   workflow_dispatch:
 
 jobs:
-  release:
+  release-readiness:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "release placeholder"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pip install maturin pytest fastapi httpx jsonschema mypy ruff torch transformers grpcio grpcio-tools
+      - run: |
+          python - <<'PY'
+          from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
+          AutoTokenizer.from_pretrained("gpt2")
+          AutoModelForCausalLM.from_pretrained("gpt2")
+          AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+          AutoTokenizer.from_pretrained("google/flan-t5-base")
+          AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+          print("release model cache warm")
+          PY
+      - run: maturin develop
+      - run: bash scripts/run_release_candidate.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-evidence
+          path: |
+            outputs/release_readiness_report.json
+            outputs/release_evidence_manifest.json
+            outputs/synthetic_inventory_report.json
+            outputs/desynthetic_status.json
+            outputs/phase_gate_report.json
+            outputs/phase2_gate_report.json
+            outputs/phase3a_gate_report.json
+            outputs/phase3b_gate_report.json
+            outputs/phase4a_gate_report.json
+            outputs/phase4a_nightly_model_report.json
+            outputs/phase4b_gate_report.json
+            docs/reports/phase01
+            docs/reports/phase2
+            docs/reports/phase3a
+            docs/reports/phase3b
+            docs/reports/phase4a
+            docs/reports/phase4b
+          if-no-files-found: error
