@@ -1,14 +1,25 @@
-# Phase 3B Report Pack
+# Circuit-Geometry Phase 3B Report Pack
+> Operator-facing evidence bundle for phase 3b readiness, traceability, and test coverage.
 
+This pack turns the latest gate artifacts into a navigable review surface. Start with the summary, confirm the test results, then use traceability to connect claims back to scripts and fixtures.
+
+## Evidence source
+- `outputs/phase3b_gate_report.json`
+
+## Refresh this pack
+- `bash scripts/run_phase3_report_pack.sh`
+
+## Inspect first
 - [Executive Summary](./executive_summary.md)
-- [Assertions Catalog](./assertions_catalog.md)
-- [Logic Specifications](./logic_specifications.md)
 - [Test Results](./test_results.md)
-- [Coverage Analysis](./coverage_analysis.md)
 - [Traceability](./traceability.md)
 
-Generated from Phase 3B gate scripts and `outputs/phase3b_gate_report.json`.
+## Pack contents
+- [Assertions Catalog](./assertions_catalog.md)
+- [Logic Specifications](./logic_specifications.md)
+- [Coverage Analysis](./coverage_analysis.md)
 
-Refresh command:
-
-`bash scripts/run_phase3_report_pack.sh`
+## Go next
+- Root guide: [Circuit-Geometry](../../../README.md)
+- API surface: [API README](../../../services/api/README.md)
+- Sidecar boundary: [Sidecar README](../../../services/sidecar/README.md)

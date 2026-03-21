@@ -1,10 +1,25 @@
-# Phase 0/1 Report Pack
+# Circuit-Geometry Phase 0/1 Report Pack
+> Operator-facing evidence bundle for phase 0/1 readiness, traceability, and test coverage.
 
+This pack turns the latest gate artifacts into a navigable review surface. Start with the summary, confirm the test results, then use traceability to connect claims back to scripts and fixtures.
+
+## Evidence source
+- `outputs/phase_gate_report.json`
+
+## Refresh this pack
+- `bash scripts/run_phase01_gate.sh`
+
+## Inspect first
 - [Executive Summary](./executive_summary.md)
-- [Assertions Catalog](./assertions_catalog.md)
-- [Logic Specifications](./logic_specifications.md)
 - [Test Results](./test_results.md)
-- [Coverage Analysis](./coverage_analysis.md)
 - [Traceability](./traceability.md)
 
-This pack mirrors the Phase 2 report structure for retrospective consistency.
+## Pack contents
+- [Assertions Catalog](./assertions_catalog.md)
+- [Logic Specifications](./logic_specifications.md)
+- [Coverage Analysis](./coverage_analysis.md)
+
+## Go next
+- Root guide: [Circuit-Geometry](../../../README.md)
+- API surface: [API README](../../../services/api/README.md)
+- Sidecar boundary: [Sidecar README](../../../services/sidecar/README.md)

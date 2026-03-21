@@ -1,24 +1,33 @@
-# UI
+# Circuit-Geometry UI
+> Lightweight mechanism explorer for running lanes, selecting workspaces, and inspecting exported artifacts in the browser.
 
-Local Mechanism Explorer UI for Phase 1 run/inspect/export flows.
+The UI is deliberately simple: it is the fastest visual path into run metadata, determinism checks, and exported report bundles.
 
-## Run locally
+## Fastest path
+```bash
+make api
+make ui
+# open http://127.0.0.1:4173
+```
 
-1. Start API:
+Or run manually:
 ```bash
 PYTHONPATH=python uvicorn services.api.app:app --reload
-```
-2. Start UI:
-```bash
 cd services/ui
 npm run dev
 ```
-3. Open `http://127.0.0.1:4173`
 
-## Current capabilities
+## What you can do today
+- submit a benchmark lane from browser controls
+- list and select runs in a workspace
+- inspect run metadata and key artifact summaries
+- trigger determinism checks for a selected run
+- export a report bundle for a selected run
 
-- Run benchmark lane from browser controls
-- List and select runs in a workspace
-- Inspect run metadata and key artifact summaries
-- Check rerun determinism for selected run
-- Export selected run report
+## Why this exists
+The UI is not meant to replace the SDK or CLI. It exists so an operator can answer “what happened in that run?” without opening Python or chasing artifact files by hand.
+
+## Go next
+- Root guide: [Circuit-Geometry](../../README.md)
+- API surface: [API README](../api/README.md)
+- Phase reports: [docs/reports/](../../docs/reports/)
