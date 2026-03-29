@@ -26,6 +26,7 @@ from .benchmark import (
 from .profiles import BenchmarkLaneConfig
 from .real_pipeline import run_real_pipeline
 from .receipts import emit_decision_receipt
+from .mair_runtime import run_mair_benchmark as run_mair_benchmark_impl
 
 
 @dataclass
@@ -138,6 +139,9 @@ class Workspace:
 
     def verify_mechanisms(self) -> None:
         self.metadata["mechanisms"] = "verified"
+
+    def run_mair_benchmark(self, manifest_path: str | Path, lane: BenchmarkLaneConfig) -> dict[str, Any]:
+        return run_mair_benchmark_impl(self, manifest_path, lane)
 
     def run_benchmark(self, lane: BenchmarkLaneConfig) -> dict[str, Any]:
         self._ensure_layout()
