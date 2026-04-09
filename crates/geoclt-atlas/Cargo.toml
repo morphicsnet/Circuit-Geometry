@@ -3,7 +3,17 @@ name = "geoclt-atlas"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Deterministic atlas fitting kernels and overlap diagnostics for Geo-CLT."
+documentation = "https://docs.rs/geoclt-atlas"
+readme = "README.md"
+keywords = ["geoclt", "atlas", "geometry", "science", "kernels"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 serde.workspace = true
-geoclt-schema = { path = "../geoclt-schema" }
+serde_json.workspace = true
+geoclt-core.workspace = true
+geoclt-schema.workspace = true
+geoclt-units.workspace = true

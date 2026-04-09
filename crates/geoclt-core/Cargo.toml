@@ -3,8 +3,18 @@ name = "geoclt-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Shared deterministic helpers, traits, and error types for Geo-CLT crates."
+documentation = "https://docs.rs/geoclt-core"
+readme = "README.md"
+keywords = ["geoclt", "core", "deterministic", "science", "errors"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
 serde.workspace = true
+serde_json.workspace = true
+serde_jcs.workspace = true
+sha2.workspace = true

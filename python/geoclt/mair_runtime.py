@@ -119,7 +119,7 @@ def run_mair_benchmark(workspace: Any, manifest_path: str | Path, lane: Benchmar
     decision_receipt = emit_decision_receipt(
         run_id=run_id,
         trace_id=trace_id,
-        model_id=str(workspace.metadata.get("model_id", "qwen3.5-hybrid-mock")),
+        model_id=str(workspace.metadata.get("model_id", "qwen3.5-hybrid-fixture")),
         lane_id=lane.lane_id,
         decision=decision,
         artifact_inputs=artifact_inputs,

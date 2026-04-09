@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MechanismCandidate",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "candidate_id",
+    "mechanism_class_type",
+    "canonical_hyperpath_signature",
+    "normalized_causal_dependency_set",
+    "invariant_feature_signature",
+    "candidate_score"
+  ],
+  "properties": {
+    "artifact_id": { "type": "string" },
+    "artifact_type": { "const": "mechanism_candidate" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "producer": { "type": "string", "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "trace_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "candidate_id": { "type": "string" },
+    "mechanism_class_type": { "type": "string" },
+    "canonical_hyperpath_signature": { "type": "object" },
+    "normalized_causal_dependency_set": { "type": "array", "items": { "type": "string" } },
+    "invariant_feature_signature": { "type": "array", "items": { "type": "string" } },
+    "candidate_score": { "type": "number" }
+  }
+}

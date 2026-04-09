@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DemoRunRecord",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "demo_run_record"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "lane_id",
+        "dataset_version",
+        "model_profile_ref",
+        "run_config_ref",
+        "item_results",
+        "receipt_refs",
+        "fallback_stats",
+        "performance_stats"
+      ],
+      "properties": {
+        "lane_id": {
+          "type": "string"
+        },
+        "dataset_version": {
+          "type": "string"
+        },
+        "model_profile_ref": {
+          "type": "string"
+        },
+        "run_config_ref": {
+          "type": "string"
+        },
+        "item_results": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "receipt_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_stats": {
+          "type": "object"
+        },
+        "performance_stats": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

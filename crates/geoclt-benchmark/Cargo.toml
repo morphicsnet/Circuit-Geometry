@@ -3,14 +3,21 @@ name = "geoclt-benchmark"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Benchmark lanes, admissions, falsifiers, and bundle contracts for Geo-CLT."
+documentation = "https://docs.rs/geoclt-benchmark"
+readme = "README.md"
+keywords = ["geoclt", "benchmark", "falsifiers", "receipts", "science"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-geoclt-schema = { path = "../geoclt-schema" }
-geoclt-causal = { path = "../geoclt-causal" }
-geoclt-ids = { path = "../geoclt-ids" }
-geoclt-units = { path = "../geoclt-units" }
+geoclt-schema.workspace = true
+geoclt-causal.workspace = true
+geoclt-ids.workspace = true
+geoclt-units.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

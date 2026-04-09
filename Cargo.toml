@@ -1,3 +1,10 @@
+[package]
+name = "geoclt-workspace"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
 [workspace]
 members = [
   "crates/geoclt-core",
@@ -26,6 +33,8 @@ edition = "2021"
 license = "MIT"
 authors = ["Geo-CLT Contributors"]
 rust-version = "1.85"
+repository = "https://github.com/morphicsnet/Circuit-Geometry"
+homepage = "https://github.com/morphicsnet/Circuit-Geometry"
 
 [workspace.dependencies]
 anyhow = "1"
@@ -52,3 +61,43 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs"] 
 jsonschema = "0.18"
 toml = "0.8"
 serde_jcs = "0.1"
+geoclt-artifacts = { version = "=0.1.0", path = "crates/geoclt-artifacts" }
+geoclt-atlas = { version = "=0.1.0", path = "crates/geoclt-atlas" }
+geoclt-benchmark = { version = "=0.1.0", path = "crates/geoclt-benchmark" }
+geoclt-canonicalize = { version = "=0.1.0", path = "crates/geoclt-canonicalize" }
+geoclt-causal = { version = "=0.1.0", path = "crates/geoclt-causal" }
+geoclt-cli = { version = "=0.1.0", path = "crates/geoclt-cli" }
+geoclt-core = { version = "=0.1.0", path = "crates/geoclt-core" }
+geoclt-ffi = { version = "=0.1.0", path = "crates/geoclt-ffi" }
+geoclt-hypergraph = { version = "=0.1.0", path = "crates/geoclt-hypergraph" }
+geoclt-ids = { version = "=0.1.0", path = "crates/geoclt-ids" }
+geoclt-metric = { version = "=0.1.0", path = "crates/geoclt-metric" }
+geoclt-runtime = { version = "=0.1.0", path = "crates/geoclt-runtime" }
+geoclt-schema = { version = "=0.1.0", path = "crates/geoclt-schema" }
+geoclt-sidecar = { version = "=0.1.0", path = "crates/geoclt-sidecar" }
+geoclt-transport = { version = "=0.1.0", path = "crates/geoclt-transport" }
+geoclt-units = { version = "=0.1.0", path = "crates/geoclt-units" }
+
+[dependencies]
+serde_json.workspace = true
+geoclt-atlas.workspace = true
+geoclt-hypergraph.workspace = true
+geoclt-metric.workspace = true
+geoclt-schema.workspace = true
+geoclt-transport.workspace = true
+geoclt-units.workspace = true
+
+[[bench]]
+name = "hypergraph_kernels"
+path = "benches/rust/hypergraph_kernels.rs"
+harness = false
+
+[[bench]]
+name = "metric_patch"
+path = "benches/rust/metric_patch.rs"
+harness = false
+
+[[bench]]
+name = "transport"
+path = "benches/rust/transport.rs"
+harness = false

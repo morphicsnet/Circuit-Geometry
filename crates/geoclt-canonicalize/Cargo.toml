@@ -3,11 +3,18 @@ name = "geoclt-canonicalize"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Canonical mechanism identity, clustering, and stability metrics for Geo-CLT."
+documentation = "https://docs.rs/geoclt-canonicalize"
+readme = "README.md"
+keywords = ["geoclt", "canonicalize", "mechanisms", "science", "ids"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 serde_json.workspace = true
 serde_jcs.workspace = true
 sha2.workspace = true
-geoclt-schema = { path = "../geoclt-schema" }
-geoclt-ids = { path = "../geoclt-ids" }
-geoclt-units = { path = "../geoclt-units" }
+geoclt-schema.workspace = true
+geoclt-ids.workspace = true
+geoclt-units.workspace = true

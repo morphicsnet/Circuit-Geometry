@@ -1,12 +1,17 @@
+//! Operator-facing CLI for benchmark, artifact, and sidecar workflows in Geo-CLT.
+
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use geoclt_artifacts::validate::validate_file_against_schema_path;
-use geoclt_benchmark::contract::{evaluate_contract, BaselineResult, ConformanceClass};
+use geoclt_benchmark::contract::{
+    evaluate_bundle_contract, evaluate_contract, BaselineResult, ConformanceClass,
+};
 use geoclt_ids::StableId;
-use geoclt_sidecar::server::serve as serve_sidecar;
+use geoclt_runtime::run::{execute_workspace_bundle, WorkspaceKernelInput};
 use geoclt_schema::artifact::ArtifactMetadata;
 use geoclt_schema::benchmark::BenchmarkLane;
 use geoclt_schema::hyperpath::HyperpathRecord;
+use geoclt_sidecar::server::serve as serve_sidecar;
 use geoclt_units::Score;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -117,11 +122,7 @@ struct Metrics {
     geodesic_deviation: f64,
 }
 
-fn build_path(
-    lane: &BenchmarkLane,
-    metrics: &Metrics,
-    identity: (&str, &str),
-) -> HyperpathRecord {
+fn build_path(lane: &BenchmarkLane, metrics: &Metrics, identity: (&str, &str)) -> HyperpathRecord {
     HyperpathRecord {
         metadata: ArtifactMetadata {
             artifact_id: format!("artifact-{}-{}", identity.0, identity.1),
@@ -164,7 +165,11 @@ fn deterministic_score(seed: &str, lower: f64, upper: f64) -> f64 {
 fn deterministic_metrics(lane: &BenchmarkLane, model_id: &str) -> Metrics {
     let seed = format!("{}:{}:{}", model_id, lane.lane_id, lane.behavior_id);
     Metrics {
-        intervention_faithfulness: deterministic_score(&(seed.clone() + ":intervention"), 0.14, 0.24),
+        intervention_faithfulness: deterministic_score(
+            &(seed.clone() + ":intervention"),
+            0.14,
+            0.24,
+        ),
         synergy_score_max: deterministic_score(&(seed.clone() + ":synergy"), 0.06, 0.16),
         chart_stability: deterministic_score(&(seed.clone() + ":chart"), 0.72, 0.96),
         transport_coherence: deterministic_score(&(seed.clone() + ":transport"), 0.72, 0.96),
@@ -177,15 +182,27 @@ fn deterministic_baselines(lane: &BenchmarkLane, model_id: &str) -> Vec<Baseline
     let mut baselines = vec![
         BaselineResult {
             baseline_id: "single_sae".to_string(),
-            intervention_faithfulness: deterministic_score(&(seed.clone() + ":single_sae"), 0.07, 0.16),
+            intervention_faithfulness: deterministic_score(
+                &(seed.clone() + ":single_sae"),
+                0.07,
+                0.16,
+            ),
         },
         BaselineResult {
             baseline_id: "ensemble_sae".to_string(),
-            intervention_faithfulness: deterministic_score(&(seed.clone() + ":ensemble_sae"), 0.08, 0.18),
+            intervention_faithfulness: deterministic_score(
+                &(seed.clone() + ":ensemble_sae"),
+                0.08,
+                0.18,
+            ),
         },
         BaselineResult {
             baseline_id: "pairwise_graph".to_string(),
-            intervention_faithfulness: deterministic_score(&(seed.clone() + ":pairwise_graph"), 0.08, 0.17),
+            intervention_faithfulness: deterministic_score(
+                &(seed.clone() + ":pairwise_graph"),
+                0.08,
+                0.17,
+            ),
         },
         BaselineResult {
             baseline_id: "geometry_free".to_string(),
@@ -203,8 +220,37 @@ fn summary(
     baselines: &[BaselineResult],
     identity: (&str, &str),
 ) -> serde_json::Value {
-    let path = build_path(lane, metrics, identity);
-    let evaluation = evaluate_contract(&path, lane, baselines);
+    let bundle_output = execute_workspace_bundle(WorkspaceKernelInput {
+        model_id: model_id.to_string(),
+        lane_id: lane.lane_id.clone(),
+        behavior_id: lane.behavior_id.clone(),
+        profile: lane.behavior_id.clone(),
+        run_id: Some(format!("run-{}-{}", identity.0, identity.1)),
+        trace_id: Some(format!("trace-{}-{}", identity.0, identity.1)),
+        feature_hints: vec![
+            format!("behavior:{}", lane.behavior_id),
+            format!("model:{model_id}"),
+        ],
+        intervention_faithfulness: metrics.intervention_faithfulness,
+        synergy_score_max: metrics.synergy_score_max,
+        chart_stability_hint: metrics.chart_stability,
+        transport_coherence_hint: metrics.transport_coherence,
+        geodesic_deviation_hint: metrics.geodesic_deviation,
+        intervention_delta_threshold: lane.intervention_delta_threshold,
+        synergy_threshold: lane.synergy_threshold,
+        chart_stability_threshold: lane.chart_stability_threshold,
+        transport_coherence_threshold: lane.transport_coherence_threshold,
+        baseline_margin_threshold: lane.baseline_margin_threshold,
+    })
+    .ok();
+
+    let evaluation = bundle_output
+        .as_ref()
+        .and_then(|output| evaluate_bundle_contract(&output.artifact_bundle, lane, baselines).ok())
+        .unwrap_or_else(|| {
+            let path = build_path(lane, metrics, identity);
+            evaluate_contract(&path, lane, baselines)
+        });
 
     serde_json::json!({
         "lane": lane,
@@ -239,6 +285,12 @@ fn summary(
         "strongest_baseline": evaluation.strongest_baseline,
         "beats_baseline": evaluation.beats_baseline,
         "conformance_class": evaluation.conformance_class.as_str(),
+        "atlas_overlap_map": bundle_output.as_ref().map(|output| serde_json::to_value(&output.kernel_output.atlas).expect("atlas json")),
+        "transport_diagnostics": bundle_output.as_ref().map(|output| serde_json::to_value(&output.kernel_output.transport).expect("transport json")),
+        "candidate_event_table": bundle_output.as_ref().map(|output| serde_json::to_value(&output.kernel_output.candidate_event_table).expect("candidate json")),
+        "mechanism_verification": bundle_output.as_ref().map(|output| serde_json::to_value(&output.kernel_output.mechanism_verification).expect("mechanism json")),
+        "canonicalized_mechanisms": bundle_output.as_ref().map(|output| serde_json::to_value(&output.kernel_output.canonicalized_mechanisms).expect("canonicalized json")),
+        "artifact_bundle_hash": bundle_output.as_ref().map(|output| output.artifact_bundle.bundle_hash.clone()),
         "status": if evaluation.conformance_class == ConformanceClass::Conformant { "completed" } else { "failed" },
     })
 }
@@ -321,7 +373,13 @@ fn main() -> Result<()> {
             let (lane, model_id) = load_profile(&profile)?;
             let metrics = deterministic_metrics(&lane, &model_id);
             let baselines = deterministic_baselines(&lane, &model_id);
-            let output = summary(&lane, &model_id, &metrics, &baselines, ("profile", &lane.lane_id));
+            let output = summary(
+                &lane,
+                &model_id,
+                &metrics,
+                &baselines,
+                ("profile", &lane.lane_id),
+            );
             enforce_pass(require_pass, &output)?;
             println!("{}", serde_json::to_string_pretty(&output)?);
         }
@@ -364,7 +422,13 @@ fn main() -> Result<()> {
                 (lane, model_id, metrics, baselines)
             };
 
-            let output = summary(&lane, &model_id, &metrics, &baselines, ("benchmark", &lane.lane_id));
+            let output = summary(
+                &lane,
+                &model_id,
+                &metrics,
+                &baselines,
+                ("benchmark", &lane.lane_id),
+            );
             enforce_pass(require_pass, &output)?;
             println!("{}", serde_json::to_string_pretty(&output)?);
         }
@@ -391,4 +455,25 @@ fn main() -> Result<()> {
         },
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod cli_tests {
+    use super::{Cli, Commands};
+    use clap::{CommandFactory, Parser};
+
+    #[test]
+    fn help_text_mentions_operator_surfaces() {
+        let mut command = Cli::command();
+        let help = command.render_long_help().to_string();
+        assert!(help.contains("benchmark"));
+        assert!(help.contains("validate-artifacts"));
+        assert!(help.contains("sidecar"));
+    }
+
+    #[test]
+    fn version_command_parses_cleanly() {
+        let cli = Cli::try_parse_from(["geoclt", "version"]).expect("parse version");
+        assert!(matches!(cli.command, Commands::Version));
+    }
 }

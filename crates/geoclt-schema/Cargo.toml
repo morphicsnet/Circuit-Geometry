@@ -3,12 +3,19 @@ name = "geoclt-schema"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Typed schema records and versioned contract structs for Geo-CLT."
+documentation = "https://docs.rs/geoclt-schema"
+readme = "README.md"
+keywords = ["geoclt", "schema", "records", "science", "serde"]
+categories = ["science", "data-structures"]
 
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
 indexmap.workspace = true
 chrono.workspace = true
-geoclt-core = { path = "../geoclt-core" }
-geoclt-ids = { path = "../geoclt-ids" }
-geoclt-units = { path = "../geoclt-units" }
+geoclt-core.workspace = true
+geoclt-ids.workspace = true
+geoclt-units.workspace = true

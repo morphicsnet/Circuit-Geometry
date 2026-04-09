@@ -528,8 +528,11 @@ dependencies = [
 name = "geoclt-atlas"
 version = "0.1.0"
 dependencies = [
+ "geoclt-core",
  "geoclt-schema",
+ "geoclt-units",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -560,7 +563,11 @@ dependencies = [
 name = "geoclt-causal"
 version = "0.1.0"
 dependencies = [
+ "geoclt-canonicalize",
+ "geoclt-core",
+ "geoclt-ids",
  "geoclt-schema",
+ "geoclt-units",
 ]
 
 [[package]]
@@ -572,6 +579,7 @@ dependencies = [
  "geoclt-artifacts",
  "geoclt-benchmark",
  "geoclt-ids",
+ "geoclt-runtime",
  "geoclt-schema",
  "geoclt-sidecar",
  "geoclt-units",
@@ -588,6 +596,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "serde",
+ "serde_jcs",
+ "serde_json",
+ "sha2",
  "thiserror",
 ]
 
@@ -596,9 +607,15 @@ name = "geoclt-ffi"
 version = "0.1.0"
 dependencies = [
  "geoclt-artifacts",
+ "geoclt-atlas",
+ "geoclt-causal",
+ "geoclt-hypergraph",
+ "geoclt-metric",
  "geoclt-runtime",
  "geoclt-schema",
+ "geoclt-transport",
  "pyo3",
+ "serde",
  "serde_json",
 ]
 
@@ -606,7 +623,11 @@ dependencies = [
 name = "geoclt-hypergraph"
 version = "0.1.0"
 dependencies = [
+ "geoclt-core",
+ "geoclt-ids",
  "geoclt-schema",
+ "geoclt-units",
+ "serde_json",
 ]
 
 [[package]]
@@ -621,6 +642,12 @@ dependencies = [
 [[package]]
 name = "geoclt-metric"
 version = "0.1.0"
+dependencies = [
+ "geoclt-core",
+ "geoclt-schema",
+ "geoclt-units",
+ "serde_json",
+]
 
 [[package]]
 name = "geoclt-python-bindings"
@@ -628,6 +655,7 @@ version = "0.1.0"
 dependencies = [
  "geoclt-ffi",
  "pyo3",
+ "serde_json",
 ]
 
 [[package]]
@@ -636,9 +664,17 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "geoclt-artifacts",
+ "geoclt-atlas",
  "geoclt-benchmark",
+ "geoclt-canonicalize",
+ "geoclt-causal",
+ "geoclt-hypergraph",
+ "geoclt-metric",
  "geoclt-schema",
  "geoclt-sidecar",
+ "geoclt-transport",
+ "geoclt-units",
+ "serde",
  "serde_json",
 ]
 
@@ -674,12 +710,31 @@ dependencies = [
 [[package]]
 name = "geoclt-transport"
 version = "0.1.0"
+dependencies = [
+ "geoclt-core",
+ "geoclt-schema",
+ "geoclt-units",
+]
 
 [[package]]
 name = "geoclt-units"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "geoclt-workspace"
+version = "0.1.0"
+dependencies = [
+ "geoclt-atlas",
+ "geoclt-hypergraph",
+ "geoclt-metric",
+ "geoclt-schema",
+ "geoclt-transport",
+ "geoclt-units",
+ "serde_json",
 ]
 
 [[package]]

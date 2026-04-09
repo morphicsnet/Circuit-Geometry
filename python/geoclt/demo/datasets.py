@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from ..artifacts import build_artifact_entry, read_json, stable_hash, validate_instance
-
-
-def _schema_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[3] / "schemas" / filename
+from .._paths import schema_path
 
 
 def compute_dataset_hash(items: list[dict[str, Any]]) -> str:
@@ -48,13 +44,13 @@ def build_manifest(
         payload=payload,
         created_at="2026-01-01T00:00:00Z",
     )
-    validate_instance(manifest, _schema_path("golden_dataset_manifest.schema.json"))
+    validate_instance(manifest, schema_path("golden_dataset_manifest.schema.json"))
     return manifest
 
 
 def load_manifest(path: str | Path) -> dict[str, Any]:
     manifest = read_json(path)
-    validate_instance(manifest, _schema_path("golden_dataset_manifest.schema.json"))
+    validate_instance(manifest, schema_path("golden_dataset_manifest.schema.json"))
     payload = manifest["payload"]
     expected_hash = compute_dataset_hash(payload["items"])
     if expected_hash != payload["dataset_hash"]:

@@ -44,8 +44,9 @@ real = [
 ]
 
 [tool.maturin]
+manifest-path = "bindings/python/Cargo.toml"
 python-source = "python"
-module-name = "geoclt_native"
+module-name = "geoclt.geoclt_native"
 features = ["pyo3/extension-module"]
 
 [tool.pytest.ini_options]

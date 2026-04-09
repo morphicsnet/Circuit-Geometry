@@ -9,7 +9,7 @@ pub const MECHANISM_CLASS_RECORD_SCHEMA_VERSION: u32 = 2;
 pub const DECISION_RECEIPT_SCHEMA_VERSION: u32 = 2;
 pub const ARTIFACT_BUNDLE_SCHEMA_VERSION: u32 = 1;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ArtifactMetadata {
     pub artifact_id: String,
     pub artifact_type: String,
@@ -41,8 +41,8 @@ pub struct ArtifactBundle {
     pub immutable: bool,
     pub artifacts: Vec<ArtifactEntry>,
     pub bundle_hash: String,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bundle_signing_mode: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bundle_signature: Option<String>,
 }

@@ -89,7 +89,9 @@ ws.export_report(run["run_id"])
 
 ## Testing and gates
 - Rust CI: `cargo build --workspace`, `cargo test --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`
-- Python CI: `PYTHONPATH=python pytest python/tests -q`, `ruff check python`, `mypy python/geoclt`
+- Python base release lane: `PYTHONPATH=python pytest python/tests -q`, `ruff check python`, `mypy python/geoclt`
+- Native-extension lane: `maturin build`
+- Real-backend / adapter lane: install `.[real]` before running API, MinIO, Redis, or full model-adapter coverage
 - Release and phase gates:
   - `bash scripts/validate_artifacts.sh`
   - `bash scripts/run_phase4a_gate.sh`
@@ -116,6 +118,7 @@ ruff check python
 mypy python/geoclt
 ```
 Start with the repo conventions in [docs/architecture/repo-conventions.md](docs/architecture/repo-conventions.md) and the ADRs in [docs/adr/](docs/adr/).
+Rust crate support classes and release expectations are documented in [docs/release/crate-support-classes.md](docs/release/crate-support-classes.md).
 
 ## License
 [MIT](LICENSE)

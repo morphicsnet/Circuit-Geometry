@@ -3,7 +3,7 @@ use std::env;
 use std::sync::Arc;
 
 use geoclt_artifacts::bundle::validate_artifact_bundle;
-use geoclt_artifacts::registry::{load_registry_from_path, SchemaRegistry};
+use geoclt_artifacts::registry::{load_packaged_registry, SchemaRegistry};
 use geoclt_schema::artifact::ArtifactBundle;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status};
@@ -232,9 +232,7 @@ impl SidecarService for SidecarGrpcService {
 }
 
 pub async fn serve(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let registry_path =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../schemas/registry.json");
-    let registry = load_registry_from_path(&registry_path)?;
+    let registry = load_packaged_registry()?;
     let service = SidecarGrpcService::new(SidecarServer::new("geoclt:sidecar:0.2.0", registry));
     tonic::transport::Server::builder()
         .add_service(SidecarServiceServer::new(service))
@@ -246,12 +244,10 @@ pub async fn serve(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::SidecarServer;
-    use geoclt_artifacts::registry::load_registry_from_path;
+    use geoclt_artifacts::registry::load_packaged_registry;
 
     fn server() -> SidecarServer {
-        let registry_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&registry_path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
         SidecarServer::new("geoclt:sidecar:0.2.0", registry)
     }
 
@@ -305,12 +301,10 @@ mod tests {
 #[cfg(test)]
 mod more_tests {
     use super::SidecarServer;
-    use geoclt_artifacts::registry::load_registry_from_path;
+    use geoclt_artifacts::registry::load_packaged_registry;
 
     fn server() -> SidecarServer {
-        let registry_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&registry_path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
         SidecarServer::new("geoclt:sidecar:0.2.0", registry)
     }
 

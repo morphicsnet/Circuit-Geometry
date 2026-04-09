@@ -74,7 +74,7 @@ mod tests {
     use geoclt_schema::artifact::{ArtifactBundle, ArtifactEntry, ArtifactMetadata};
 
     use super::{compute_bundle_hash, finalize_artifact_entry, validate_artifact_bundle};
-    use crate::registry::load_registry_from_path;
+    use crate::registry::load_packaged_registry;
 
     #[test]
     fn finalizes_artifact_entry_with_deterministic_identity() {
@@ -99,9 +99,7 @@ mod tests {
 
     #[test]
     fn validates_immutable_bundle_hash() {
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
 
         let artifact = finalize_artifact_entry(ArtifactEntry {
             metadata: ArtifactMetadata {

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PilotRunRecord",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "pilot_run_record"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "pilot_scope_ref",
+        "lane_id",
+        "demo_run_ref",
+        "review_status",
+        "policy_routing_outcome",
+        "adjudication_outcome"
+      ],
+      "properties": {
+        "pilot_scope_ref": {
+          "type": "string"
+        },
+        "lane_id": {
+          "type": "string"
+        },
+        "demo_run_ref": {
+          "type": "string"
+        },
+        "review_status": {
+          "type": "string"
+        },
+        "policy_routing_outcome": {
+          "type": "string"
+        },
+        "adjudication_outcome": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

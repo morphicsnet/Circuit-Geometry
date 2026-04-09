@@ -8,13 +8,12 @@ import sqlite3
 from typing import Any
 from uuid import uuid4
 
+from .atlas import fit_atlas as fit_atlas_kernel
 from .artifacts import (
-    content_hash,
-    derive_artifact_id,
     read_json,
     stable_hash,
     validate_instance,
-    validate_instances,
+    write_json,
     write_json_with_hash,
 )
 from .benchmark import (
@@ -23,10 +22,20 @@ from .benchmark import (
     evaluate_admission,
     evaluate_falsifiers,
 )
+from .causal import verify_mechanisms as verify_mechanisms_kernel
+from .hypergraph import (
+    materialize_hyperpaths,
+    propose_events as propose_events_kernel,
+)
+from ._kernel_math import feature_hints_from_candidate_events
+from .metric import estimate_pullback_metric
 from .profiles import BenchmarkLaneConfig
 from .real_pipeline import run_real_pipeline
 from .receipts import emit_decision_receipt
 from .mair_runtime import run_mair_benchmark as run_mair_benchmark_impl
+from ._paths import schema_path
+from .runtime import run_workspace_bundle, run_workspace_kernels
+from .transport import fit_transport as fit_transport_kernel
 
 
 @dataclass
@@ -102,7 +111,7 @@ class Workspace:
         return lower + (upper - lower) * ratio
 
     def _schema_path(self, filename: str) -> Path:
-        return Path(__file__).resolve().parents[2] / "schemas" / filename
+        return schema_path(filename)
 
     def _new_run_id(self, lane_id: str) -> str:
         timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
@@ -113,10 +122,18 @@ class Workspace:
             {
                 "model_id": model_id,
                 "lane": asdict(lane),
-                "atlas_profile": self.metadata.get("atlas_profile", lane.behavior_id),
-                "transport": self.metadata.get("transport", "unset"),
-                "events": self.metadata.get("events", "unset"),
-                "mechanisms": self.metadata.get("mechanisms", "unset"),
+                "atlas": self.metadata.get(
+                    "atlas_overlap_map", self.metadata.get("atlas_profile", lane.behavior_id)
+                ),
+                "transport": self.metadata.get(
+                    "transport_diagnostics", self.metadata.get("transport", "unset")
+                ),
+                "events": self.metadata.get(
+                    "candidate_event_table", self.metadata.get("events", "unset")
+                ),
+                "mechanisms": self.metadata.get(
+                    "mechanism_verification", self.metadata.get("mechanisms", "unset")
+                ),
             }
         )
 
@@ -129,16 +146,83 @@ class Workspace:
         self.metadata["model_id"] = model_id
 
     def fit_atlas(self, profile: str) -> None:
+        model_id = str(self.metadata.get("model_id", "gpt2-small"))
+        atlas = fit_atlas_kernel(
+            model_id=model_id,
+            lane_id=profile,
+            profile=profile,
+            feature_hints=list(self.metadata.get("feature_hints", [])),
+        )
+        metric = estimate_pullback_metric(
+            lane_id=profile,
+            atlas=atlas,
+            feature_hints=list(self.metadata.get("feature_hints", [])),
+        )
         self.metadata["atlas_profile"] = profile
+        self.metadata["atlas_overlap_map"] = atlas
+        self.metadata["metric_estimate"] = metric
 
     def fit_transport(self) -> None:
-        self.metadata["transport"] = "fit"
+        profile = str(self.metadata.get("atlas_profile", "default"))
+        atlas = self.metadata.get("atlas_overlap_map")
+        if atlas is None:
+            self.fit_atlas(profile)
+            atlas = self.metadata["atlas_overlap_map"]
+        metric = self.metadata.get("metric_estimate")
+        if metric is None:
+            metric = estimate_pullback_metric(
+                lane_id=profile,
+                atlas=atlas,
+                feature_hints=list(self.metadata.get("feature_hints", [])),
+            )
+            self.metadata["metric_estimate"] = metric
+        transport = fit_transport_kernel(lane_id=profile, atlas=atlas, metric=metric)
+        self.metadata["transport"] = transport
+        self.metadata["transport_diagnostics"] = transport
 
     def propose_events(self) -> None:
-        self.metadata["events"] = "proposed"
+        profile = str(self.metadata.get("atlas_profile", "default"))
+        transport = self.metadata.get("transport_diagnostics")
+        if transport is None:
+            self.fit_transport()
+            transport = self.metadata["transport_diagnostics"]
+        candidate_event_table = propose_events_kernel(
+            lane_id=profile,
+            behavior_id=profile,
+            transport=transport,
+            feature_hints=list(self.metadata.get("feature_hints", [])),
+        )
+        self.metadata["events"] = candidate_event_table
+        self.metadata["candidate_event_table"] = candidate_event_table
 
     def verify_mechanisms(self) -> None:
-        self.metadata["mechanisms"] = "verified"
+        profile = str(self.metadata.get("atlas_profile", "default"))
+        model_id = str(self.metadata.get("model_id", "gpt2-small"))
+        feature_hints = list(self.metadata.get("feature_hints", []))
+        kernel_output = run_workspace_kernels(
+            model_id=model_id,
+            lane_id=profile,
+            behavior_id=profile,
+            profile=profile,
+            feature_hints=feature_hints,
+            intervention_faithfulness=self._deterministic_score(profile, 0.16, 0.28),
+            synergy_score_max=self._deterministic_score(profile, 0.08, 0.18),
+            chart_stability_hint=self._deterministic_score(f"{profile}:chart", 0.78, 0.92),
+            transport_coherence_hint=self._deterministic_score(f"{profile}:transport", 0.76, 0.90),
+            geodesic_deviation_hint=self._deterministic_score(f"{profile}:geodesic", 0.02, 0.12),
+            run_id=f"workspace-{profile}",
+            trace_id=f"workspace-trace-{profile}",
+        )
+        self.metadata["atlas_overlap_map"] = kernel_output["atlas"]
+        self.metadata["metric_estimate"] = kernel_output["metric"]
+        self.metadata["transport"] = kernel_output["transport"]
+        self.metadata["transport_diagnostics"] = kernel_output["transport"]
+        self.metadata["events"] = kernel_output["candidate_event_table"]
+        self.metadata["candidate_event_table"] = kernel_output["candidate_event_table"]
+        self.metadata["admitted_hyperpath_table"] = kernel_output["admitted_hyperpath_table"]
+        self.metadata["mechanisms"] = kernel_output["mechanism_verification"]
+        self.metadata["mechanism_verification"] = kernel_output["mechanism_verification"]
+        self.metadata["canonicalized_mechanisms"] = kernel_output["canonicalized_mechanisms"]
 
     def run_mair_benchmark(self, manifest_path: str | Path, lane: BenchmarkLaneConfig) -> dict[str, Any]:
         return run_mair_benchmark_impl(self, manifest_path, lane)
@@ -147,7 +231,6 @@ class Workspace:
         self._ensure_layout()
 
         model_id = str(self.metadata.get("model_id", "gpt2-small"))
-        input_signature = self._input_signature(lane, model_id)
         run_id = self._new_run_id(lane.lane_id)
         run_dir = self.root / "runs" / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -172,6 +255,46 @@ class Workspace:
         token_count = real_output.token_count
         model_id = real_output.model_id
         self.metadata["real_mode"] = True
+        feature_hints = feature_hints_from_candidate_events(candidate_events, lane.behavior_id)
+        atlas_profile = str(self.metadata.get("atlas_profile", lane.behavior_id))
+        bundle_output = run_workspace_bundle(
+            model_id=model_id,
+            lane_id=lane.lane_id,
+            behavior_id=lane.behavior_id,
+            profile=atlas_profile,
+            feature_hints=feature_hints,
+            intervention_faithfulness=intervention_faithfulness,
+            synergy_score_max=synergy_score_max,
+            chart_stability_hint=chart_stability,
+            transport_coherence_hint=transport_coherence,
+            geodesic_deviation_hint=geodesic_deviation,
+            intervention_delta_threshold=lane.intervention_delta_threshold,
+            synergy_threshold=lane.synergy_threshold,
+            chart_stability_threshold=lane.chart_stability_threshold,
+            transport_coherence_threshold=lane.transport_coherence_threshold,
+            baseline_margin_threshold=lane.baseline_margin_threshold,
+        )
+        kernel_output = bundle_output["kernel_output"]
+        artifact_bundle = bundle_output["artifact_bundle"]
+        atlas_overlap_map = kernel_output["atlas"]
+        metric_estimate = kernel_output["metric"]
+        transport_diagnostics = kernel_output["transport"]
+        candidate_event_table = kernel_output["candidate_event_table"]
+        admitted_hyperpath_table = kernel_output["admitted_hyperpath_table"]
+        mechanism_verification = kernel_output["mechanism_verification"]
+        canonicalized_mechanisms = kernel_output["canonicalized_mechanisms"]
+        self.metadata["feature_hints"] = feature_hints
+        self.metadata["atlas_overlap_map"] = atlas_overlap_map
+        self.metadata["metric_estimate"] = metric_estimate
+        self.metadata["transport_diagnostics"] = transport_diagnostics
+        self.metadata["candidate_event_table"] = candidate_event_table
+        self.metadata["admitted_hyperpath_table"] = admitted_hyperpath_table
+        self.metadata["mechanism_verification"] = mechanism_verification
+        self.metadata["canonicalized_mechanisms"] = canonicalized_mechanisms
+        self.metadata["transport"] = transport_diagnostics
+        self.metadata["events"] = candidate_event_table
+        self.metadata["mechanisms"] = mechanism_verification
+        input_signature = self._input_signature(lane, model_id)
 
         admission = evaluate_admission(
             lane=lane,
@@ -206,82 +329,30 @@ class Workspace:
         artifact_created_at = "2026-01-01T00:00:00Z"
         stable_trace_id = self._stable_id("trace", input_signature, lane.lane_id)
 
-        def enrich_record(record: dict[str, Any], artifact_type: str) -> dict[str, Any]:
-            digest = content_hash(record)
-            return {
-                "artifact_id": derive_artifact_id(artifact_type, 2, digest),
-                "artifact_type": artifact_type,
-                "schema_version": 2,
-                "producer": producer,
-                "trace_id": stable_trace_id,
-                "run_id": run_id,
-                "content_hash": digest,
-                "created_at": artifact_created_at,
-                **record,
-            }
-
-        admitted_hyperpaths: list[dict[str, Any]] = []
-        if admission["passed"]:
-            admitted_hyperpaths.append(
+        admitted_hyperpaths = [
+            path
+            for path in admitted_hyperpath_table["hyperpaths"]
+            if path["admitted"] and admission["passed"]
+        ]
+        benchmark_result = {
+            "artifact_id": self._stable_id("benchmark", input_signature, lane.lane_id),
+            "artifact_type": "benchmark_result",
+            "schema_version": 2,
+            "producer": producer,
+            "trace_id": stable_trace_id,
+            "run_id": run_id,
+            "content_hash": stable_hash(
                 {
-                    "path_id": self._stable_id("path", input_signature, "1"),
-                    "behavior_id": lane.behavior_id,
-                    "event_ids": [event["event_id"] for event in candidate_events],
-                    "layer_ids": [5, 6],
-                    "chart_stability": round(chart_stability, 4),
-                    "transport_coherence": round(transport_coherence, 4),
-                    "intervention_faithfulness": round(intervention_faithfulness, 4),
-                    "synergy_score_max": round(synergy_score_max, 4),
-                    "geodesic_deviation": round(geodesic_deviation, 4),
-                    "admitted": conformance != "rejected",
+                    "model_id": model_id,
+                    "task_id": lane.behavior_id,
+                    "baseline_id": baseline_report.get("strongest_baseline_id", "none"),
+                    "metric_name": "intervention_faithfulness",
+                    "metric_value": round(intervention_faithfulness, 4),
+                    "threshold": lane.intervention_delta_threshold,
+                    "passed": conformance != "rejected",
                 }
-            )
-
-        event_records = [
-            enrich_record(
-                {
-                    "event_id": event["event_id"],
-                    "sample_id": self._stable_id("sample", input_signature, "1"),
-                    "layer_span": [5, 6],
-                "time_window": "answer-token",
-                "participant_set": event["participant_set"],
-                "participant_types": event["participant_types"],
-                "transport_context_id": "context-default",
-                    "causal_weight": event["causal_weight"],
-                    "reliability_score": event["reliability_score"],
-                    "proposer_score": None,
-                },
-                "event_record",
-            )
-            for event in candidate_events
-        ]
-        validate_instances(event_records, self._schema_path("event_record.schema.json"))
-
-        hyperpath_records = [
-            enrich_record(
-                {
-                "path_id": path["path_id"],
-                "behavior_id": path["behavior_id"],
-                "event_ids": path["event_ids"],
-                "chart_ids": ["chart-a", "chart-b"],
-                "layer_ids": path["layer_ids"],
-                "transport_edge_ids": ["edge-1"],
-                "geodesic_deviation": path["geodesic_deviation"],
-                "chart_stability": path["chart_stability"],
-                "transport_coherence": path["transport_coherence"],
-                "intervention_faithfulness": path["intervention_faithfulness"],
-                "synergy_score_max": path["synergy_score_max"],
-                "admitted": bool(path["admitted"]),
-                },
-                "hyperpath_record",
-            )
-            for path in admitted_hyperpaths
-        ]
-        validate_instances(hyperpath_records, self._schema_path("hyperpath_record.schema.json"))
-
-        benchmark_result = enrich_record(
-            {
-            "run_id": self._stable_id("benchmark", input_signature, lane.lane_id),
+            ),
+            "created_at": artifact_created_at,
             "model_id": model_id,
             "task_id": lane.behavior_id,
             "baseline_id": baseline_report.get("strongest_baseline_id", "none"),
@@ -289,34 +360,23 @@ class Workspace:
             "metric_value": round(intervention_faithfulness, 4),
             "threshold": lane.intervention_delta_threshold,
             "passed": conformance != "rejected",
-            },
-            "benchmark_result",
-        )
+        }
         validate_instance(benchmark_result, self._schema_path("benchmark_result.schema.json"))
+        validate_instance(artifact_bundle, self._schema_path("artifact_bundle.schema.json"))
 
         artifact_payloads: dict[str, dict[str, Any]] = {
             "atlas_overlap_map": {
-                "model_id": model_id,
-                "lane_id": lane.lane_id,
-                "chart_count": 4,
-                "overlap_score": round(chart_stability, 4),
-                "profile": self.metadata.get("atlas_profile", lane.behavior_id),
+                **atlas_overlap_map,
                 "pipeline_mode": pipeline_mode,
                 "backend_type": backend_type,
             },
             "transport_diagnostics": {
-                "lane_id": lane.lane_id,
-                "loop_consistency": round(transport_coherence, 4),
-                "distortion": round(max(0.0, 1.0 - transport_coherence), 4),
-                "coherence": round(transport_coherence, 4),
-                "geodesic_deviation": round(geodesic_deviation, 4),
+                **transport_diagnostics,
                 "pipeline_mode": pipeline_mode,
                 "backend_type": backend_type,
             },
             "candidate_event_table": {
-                "lane_id": lane.lane_id,
-                "candidate_count": len(candidate_events),
-                "events": candidate_events,
+                **candidate_event_table,
                 "pipeline_mode": pipeline_mode,
                 "backend_type": backend_type,
             },
@@ -333,6 +393,9 @@ class Workspace:
                 "baseline_report": baseline_report,
                 "conformance_class": conformance,
                 "benchmark_result": benchmark_result,
+                "mechanism_verification": mechanism_verification,
+                "canonicalized_mechanisms": canonicalized_mechanisms,
+                "artifact_bundle_hash": artifact_bundle["bundle_hash"],
                 "pipeline_mode": pipeline_mode,
                 "backend_type": backend_type,
                 "prompt_hash": stable_hash(pipeline_prompt) if pipeline_prompt else None,
@@ -347,14 +410,11 @@ class Workspace:
             artifact_hashes[artifact_type] = write_json_with_hash(path, payload)
             artifact_paths[artifact_type] = str(path.resolve())
 
-        bundle_hash = stable_hash(
-            {
-                "input_signature": input_signature,
-                "lane_id": lane.lane_id,
-                "model_id": model_id,
-                "artifact_hashes": artifact_hashes,
-            }
-        )
+        bundle_path = artifacts_dir / "artifact_bundle.json"
+        write_json(bundle_path, artifact_bundle)
+        artifact_paths["artifact_bundle"] = str(bundle_path.resolve())
+        artifact_hashes["artifact_bundle"] = str(artifact_bundle["bundle_hash"])
+        bundle_hash = str(artifact_bundle["bundle_hash"])
 
         now = datetime.now(UTC).isoformat()
         with self._connect() as connection:

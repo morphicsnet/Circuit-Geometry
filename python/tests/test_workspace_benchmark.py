@@ -15,7 +15,7 @@ def test_workspace_benchmark_artifacts_and_report(tmp_path):
     run_two = ws.run_benchmark(lane)
 
     assert run_two["status"] == "completed"
-    assert len(run_two["artifact_paths"]) == 5
+    assert len(run_two["artifact_paths"]) == 6
 
     payloads = {key: read_json(path) for key, path in run_two["artifact_paths"].items()}
     assert set(payloads.keys()) == {
@@ -24,6 +24,7 @@ def test_workspace_benchmark_artifacts_and_report(tmp_path):
         "candidate_event_table",
         "admitted_hyperpath_table",
         "falsifier_sheet",
+        "artifact_bundle",
     }
 
     atlas = payloads["atlas_overlap_map"]
@@ -52,6 +53,12 @@ def test_workspace_benchmark_artifacts_and_report(tmp_path):
             "benchmark_result",
         )
     )
+
+    bundle = payloads["artifact_bundle"]
+    assert bundle["bundle_hash"] == run_two["artifact_bundle_hash"]
+    artifact_types = {artifact["artifact_type"] for artifact in bundle["artifacts"]}
+    assert "mechanism_candidate" in artifact_types
+    assert "mechanism_class_record" in artifact_types
 
     determinism = ws.determinism_for_run(run_two["run_id"])
     assert determinism["is_deterministic"] is True

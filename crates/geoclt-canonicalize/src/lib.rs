@@ -1,3 +1,5 @@
+//! Canonical mechanism identity, clustering, and stability metrics for Geo-CLT.
+
 pub mod canonicalize;
 pub mod falsifier_patterns;
 pub mod hyperpath_signature;

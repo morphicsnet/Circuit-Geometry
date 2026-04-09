@@ -3,6 +3,13 @@ name = "geoclt-ids"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Deterministic stable identifiers for Geo-CLT artifacts and mechanisms."
+documentation = "https://docs.rs/geoclt-ids"
+readme = "README.md"
+keywords = ["geoclt", "ids", "hashing", "science", "deterministic"]
+categories = ["algorithms", "data-structures"]
 
 [dependencies]
 serde.workspace = true

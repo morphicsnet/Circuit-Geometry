@@ -20,7 +20,8 @@ def test_benchmark_run(tmp_path):
         "pairwise_graph",
         "geometry_free",
     }
-    assert len(report["artifact_paths"]) == 5
+    assert len(report["artifact_paths"]) == 6
+    assert "artifact_bundle" in report["artifact_paths"]
     assert report["input_signature"]
 
 

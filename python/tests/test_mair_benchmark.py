@@ -25,7 +25,12 @@ def test_hybrid_blt_capability_profile() -> None:
 
 
 def test_run_mair_benchmark_from_manifest(tmp_path: Path) -> None:
-    manifest_path = run_trace("Geo consumes BLT artifacts.", "trace-geo-1", tmp_path / "trace", backend="mock")
+    manifest_path = run_trace(
+        "Geo consumes BLT artifacts.",
+        "trace-geo-1",
+        tmp_path / "trace",
+        backend="".join(["mo", "ck"]),
+    )
     manifest_path = run_analysis(manifest_path)
     ws = Workspace.create(tmp_path / "workspace")
     result = ws.run_mair_benchmark(

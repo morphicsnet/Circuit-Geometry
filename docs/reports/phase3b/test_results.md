@@ -19,7 +19,7 @@
   "evaluate_lane_deterministic": true,
   "explorer_api_smoke_pass": true,
   "explorer_read_only_semantics": true,
-  "git_commit": "a3894b4a02e010deacdc2ddc1ab1f803ccf23567",
+  "git_commit": "2007008f340a17efdca1a38d0d9f6c48e0a907ea",
   "mechanism_diff_deterministic": true,
   "mechanism_diff_uses_ids_only": true,
   "overall_pass": true,
@@ -30,8 +30,8 @@
   "report_bundle_schema_valid": true,
   "report_pack_regeneration_deterministic": true,
   "sample_run_ids": [
-    "claims-triage.v1.20260318T142800Z.38ef7ddb",
-    "claims-triage.v1.20260318T142802Z.41556d50"
+    "claims-triage.v1.20260404T002728Z.c371b564",
+    "claims-triage.v1.20260404T002731Z.bf249224"
   ],
   "trace_endpoint_deterministic": true
 }

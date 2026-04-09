@@ -3,6 +3,16 @@ name = "geoclt-units"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Shared typed units used throughout Geo-CLT records and kernels."
+documentation = "https://docs.rs/geoclt-units"
+readme = "README.md"
+keywords = ["geoclt", "units", "serde", "science", "types"]
+categories = ["science"]
 
 [dependencies]
 serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

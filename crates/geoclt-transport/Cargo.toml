@@ -3,3 +3,15 @@ name = "geoclt-transport"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Transport fitting and coherence diagnostics for Geo-CLT atlas stages."
+documentation = "https://docs.rs/geoclt-transport"
+readme = "README.md"
+keywords = ["geoclt", "transport", "geometry", "science", "kernels"]
+categories = ["science", "algorithms"]
+
+[dependencies]
+geoclt-core.workspace = true
+geoclt-schema.workspace = true
+geoclt-units.workspace = true

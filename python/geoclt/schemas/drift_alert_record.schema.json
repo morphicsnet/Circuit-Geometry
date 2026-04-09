@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DriftAlertRecord",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "drift_alert_record"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "cohort_ref",
+        "mechanism_family_id",
+        "drift_metric",
+        "threshold",
+        "alert_status",
+        "supporting_refs"
+      ],
+      "properties": {
+        "cohort_ref": {
+          "type": "string"
+        },
+        "mechanism_family_id": {
+          "type": "string"
+        },
+        "drift_metric": {
+          "type": "number"
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "alert_status": {
+          "type": "string"
+        },
+        "supporting_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,13 @@ name = "geoclt-artifacts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Artifact bundle assembly, validation, compatibility, and registry helpers for Geo-CLT."
+documentation = "https://docs.rs/geoclt-artifacts"
+readme = "README.md"
+keywords = ["geoclt", "artifacts", "schema", "receipts", "science"]
+categories = ["science", "encoding"]
 
 [dependencies]
 serde.workspace = true
@@ -12,4 +19,4 @@ sha2.workspace = true
 hmac.workspace = true
 hex.workspace = true
 serde_jcs.workspace = true
-geoclt-schema = { path = "../geoclt-schema" }
+geoclt-schema.workspace = true

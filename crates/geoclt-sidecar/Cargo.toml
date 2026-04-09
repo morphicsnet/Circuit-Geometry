@@ -3,6 +3,13 @@ name = "geoclt-sidecar"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Sidecar server and bundle emission boundary for Geo-CLT trace delivery."
+documentation = "https://docs.rs/geoclt-sidecar"
+readme = "README.md"
+keywords = ["geoclt", "sidecar", "grpc", "artifacts", "science"]
+categories = ["science", "network-programming"]
 
 [dependencies]
 tokio.workspace = true
@@ -11,8 +18,8 @@ prost.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
-geoclt-artifacts = { path = "../geoclt-artifacts" }
-geoclt-schema = { path = "../geoclt-schema" }
+geoclt-artifacts.workspace = true
+geoclt-schema.workspace = true
 
 [build-dependencies]
 tonic-build = "0.12"

@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from pathlib import Path
 from typing import Any
 
+from .._paths import schema_path
 from ..artifacts import build_artifact_entry
 from ..artifacts import validate_instance
-
-
-def _schema_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[3] / "schemas" / filename
 
 
 def pseudonymous_reviewer_id(raw_reviewer_id: str, identity_key_id: str, salt: str) -> str:
@@ -63,5 +59,5 @@ def build_operator_review_record(
         payload=payload,
         created_at="2026-01-01T00:00:00Z",
     )
-    validate_instance(record, _schema_path("operator_review_record.schema.json"))
+    validate_instance(record, schema_path("operator_review_record.schema.json"))
     return record

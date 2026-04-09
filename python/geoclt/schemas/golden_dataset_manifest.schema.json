@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GoldenDatasetManifest",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "golden_dataset_manifest"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "dataset_id",
+        "dataset_version",
+        "lane_id",
+        "items",
+        "provenance",
+        "expected_schema",
+        "labels",
+        "ambiguity_flags",
+        "dataset_hash"
+      ],
+      "properties": {
+        "dataset_id": {
+          "type": "string"
+        },
+        "dataset_version": {
+          "type": "string"
+        },
+        "lane_id": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item_id",
+              "input",
+              "expected_output",
+              "label"
+            ],
+            "properties": {
+              "item_id": {
+                "type": "string"
+              },
+              "input": {
+                "type": "object"
+              },
+              "expected_output": {
+                "type": "object"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ambiguous": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "expected_schema": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ambiguity_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dataset_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

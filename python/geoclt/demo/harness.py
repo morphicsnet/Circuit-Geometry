@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
+from .._paths import schema_path
 from ..artifacts import build_artifact_entry, build_artifact_bundle, stable_hash, validate_instance
 from ..receipts import emit_decision_receipt
 from .scoring import score_items
-
-
-def _schema_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[3] / "schemas" / filename
 
 
 def build_run_config_record(
@@ -43,7 +39,7 @@ def build_run_config_record(
         },
         created_at="2026-01-01T00:00:00Z",
     )
-    validate_instance(record, _schema_path("run_config_record.schema.json"))
+    validate_instance(record, schema_path("run_config_record.schema.json"))
     return record
 
 
@@ -129,7 +125,7 @@ def run_demo_lane(
     )
     validate_instance(
         demo_run_record,
-        _schema_path("demo_run_record.schema.json"),
+        schema_path("demo_run_record.schema.json"),
     )
 
     bundle = build_artifact_bundle(

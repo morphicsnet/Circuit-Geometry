@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
+from .._paths import schema_path
 from ..artifacts import build_artifact_entry, validate_instance
 
 
 _ALLOWED_FALLBACK_TYPES = {"policy_fallback", "model_fallback", "operator_fallback"}
-
-
-def _schema_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[3] / "schemas" / filename
-
 
 def build_scorecard(
     *,
@@ -43,7 +38,7 @@ def build_scorecard(
         payload=payload,
         created_at="2026-01-01T00:00:00Z",
     )
-    validate_instance(scorecard, _schema_path("demo_scorecard.schema.json"))
+    validate_instance(scorecard, schema_path("demo_scorecard.schema.json"))
     return scorecard
 
 

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelProfileRecord",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_type",
+    "schema_version",
+    "producer",
+    "trace_id",
+    "run_id",
+    "content_hash",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "model_profile_record"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[a-z0-9_-]+:[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "model_profile_id",
+        "model_id",
+        "tokenizer_version",
+        "chat_template_version",
+        "precision_mode",
+        "quantization",
+        "max_context",
+        "decoding",
+        "structured_output_mode",
+        "runtime_backend",
+        "seed_policy"
+      ],
+      "properties": {
+        "model_profile_id": {
+          "type": "string"
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "tokenizer_version": {
+          "type": "string"
+        },
+        "chat_template_version": {
+          "type": "string"
+        },
+        "precision_mode": {
+          "type": "string"
+        },
+        "quantization": {
+          "type": "string"
+        },
+        "max_context": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "decoding": {
+          "type": "object"
+        },
+        "structured_output_mode": {
+          "type": "string"
+        },
+        "runtime_backend": {
+          "type": "string"
+        },
+        "seed_policy": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

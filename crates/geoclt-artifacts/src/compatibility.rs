@@ -51,7 +51,7 @@ mod tests {
     use geoclt_schema::artifact::{ArtifactBundle, ArtifactEntry, ArtifactMetadata};
 
     use super::check_bundle_compatibility;
-    use crate::registry::load_registry_from_path;
+    use crate::registry::load_packaged_registry;
 
     fn sample_bundle(version: u32, transitional: bool) -> ArtifactBundle {
         ArtifactBundle {
@@ -133,27 +133,21 @@ mod tests {
 
     #[test]
     fn accepts_n_and_n_minus_1() {
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
         assert!(check_bundle_compatibility(&registry, &sample_bundle(2, false)).is_ok());
         assert!(check_bundle_compatibility(&registry, &sample_bundle(1, false)).is_ok());
     }
 
     #[test]
     fn rejects_n_minus_2() {
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
         let result = check_bundle_compatibility(&registry, &sample_bundle(0, false));
         assert!(result.is_err());
     }
 
     #[test]
     fn mixed_versions_rejected_unless_transitional() {
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../schemas/registry.json");
-        let registry = load_registry_from_path(&path).expect("registry");
+        let registry = load_packaged_registry().expect("registry");
         assert!(check_bundle_compatibility(&registry, &mixed_bundle(false)).is_err());
         assert!(check_bundle_compatibility(&registry, &mixed_bundle(true)).is_ok());
     }

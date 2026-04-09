@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package geoclt.sidecar;
+
+message TraceStart {
+  string trace_id = 1;
+  string adapter_id = 2;
+  string model_id = 3;
+  string lane_id = 4;
+  string run_id = 5;
+  string started_at = 6;
+}
+
+message ActivationChunk {
+  string trace_id = 1;
+  string chunk_idempotency_key = 2;
+  uint32 layer_id = 3;
+  bytes payload = 4;
+  uint64 sequence_no = 5;
+}
+
+message TraceEnd {
+  string trace_id = 1;
+  uint64 total_chunks = 2;
+}
+
+message TraceAbort {
+  string trace_id = 1;
+  string reason = 2;
+}
+
+message ArtifactBundleRef {
+  string bundle_id = 1;
+  string store_uri = 2;
+  string bundle_hash = 3;
+}
+
+message ArtifactInline {
+  string bundle_id = 1;
+  bytes bundle_json = 2;
+  string bundle_hash = 3;
+}
+
+message Ack {
+  bool ok = 1;
+  string message = 2;
+}
+
+message Nack {
+  string code = 1;
+  string message = 2;
+}
+
+message BackpressureSignal {
+  string trace_id = 1;
+  uint32 queue_depth = 2;
+  uint32 recommended_delay_ms = 3;
+}
+
+message ServerStatus {
+  string status = 1;
+  uint32 active_traces = 2;
+}
+
+service SidecarService {
+  rpc StartTrace(TraceStart) returns (Ack);
+  rpc PushActivation(ActivationChunk) returns (Ack);
+  rpc EndTrace(TraceEnd) returns (ArtifactInline);
+  rpc AbortTrace(TraceAbort) returns (Ack);
+  rpc GetStatus(Ack) returns (ServerStatus);
+}

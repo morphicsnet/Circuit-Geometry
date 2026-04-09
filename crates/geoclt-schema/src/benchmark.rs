@@ -6,7 +6,6 @@ use crate::artifact::ArtifactMetadata;
 pub struct BenchmarkResult {
     #[serde(flatten)]
     pub metadata: ArtifactMetadata,
-    pub run_id: String,
     pub model_id: String,
     pub task_id: String,
     pub baseline_id: String,

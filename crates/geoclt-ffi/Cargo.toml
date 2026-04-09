@@ -3,10 +3,23 @@ name = "geoclt-ffi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Internal PyO3 bridge for exposing Geo-CLT kernels and runtime bundles to Python."
+documentation = "https://docs.rs/geoclt-ffi"
+readme = "README.md"
+keywords = ["geoclt", "ffi", "python", "pyo3", "science"]
+categories = ["science", "development-tools::ffi"]
 
 [dependencies]
 pyo3.workspace = true
+serde.workspace = true
 serde_json.workspace = true
-geoclt-runtime = { path = "../geoclt-runtime" }
-geoclt-schema = { path = "../geoclt-schema" }
-geoclt-artifacts = { path = "../geoclt-artifacts" }
+geoclt-atlas.workspace = true
+geoclt-causal.workspace = true
+geoclt-hypergraph.workspace = true
+geoclt-metric.workspace = true
+geoclt-runtime.workspace = true
+geoclt-schema.workspace = true
+geoclt-artifacts.workspace = true
+geoclt-transport.workspace = true

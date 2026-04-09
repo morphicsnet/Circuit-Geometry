@@ -1,5 +1,6 @@
 use crate::admission::{evaluate_admission, AdmissionEvaluation};
 use crate::falsifiers::{evaluate_falsifiers, FalsifierReport};
+use geoclt_schema::artifact::{ArtifactBundle, ArtifactEntry};
 use geoclt_schema::benchmark::BenchmarkLane;
 use geoclt_schema::hyperpath::HyperpathRecord;
 use serde::{Deserialize, Serialize};
@@ -35,6 +36,32 @@ pub struct ContractEvaluation {
     pub strongest_baseline: f64,
     pub beats_baseline: bool,
     pub conformance_class: ConformanceClass,
+}
+
+fn entry_as_record<T: for<'de> Deserialize<'de>>(entry: &ArtifactEntry) -> Result<T, String> {
+    let metadata = serde_json::to_value(&entry.metadata)
+        .map_err(|error| format!("failed to serialize artifact metadata: {error}"))?;
+    let payload = entry.payload.as_object().ok_or_else(|| {
+        format!(
+            "artifact payload for {} must be a JSON object",
+            entry.metadata.artifact_type
+        )
+    })?;
+    let mut merged = metadata
+        .as_object()
+        .cloned()
+        .ok_or_else(|| "artifact metadata must serialize to an object".to_string())?;
+    merged.extend(
+        payload
+            .iter()
+            .map(|(key, value)| (key.clone(), value.clone())),
+    );
+    serde_json::from_value(serde_json::Value::Object(merged)).map_err(|error| {
+        format!(
+            "failed to deserialize {}: {error}",
+            entry.metadata.artifact_type
+        )
+    })
 }
 
 fn strongest_baseline(baselines: &[BaselineResult]) -> (Option<String>, f64) {
@@ -90,11 +117,34 @@ pub fn evaluate_contract(
     }
 }
 
+pub fn evaluate_bundle_contract(
+    bundle: &ArtifactBundle,
+    lane: &BenchmarkLane,
+    baselines: &[BaselineResult],
+) -> Result<ContractEvaluation, String> {
+    let mut paths = bundle
+        .artifacts
+        .iter()
+        .filter(|entry| entry.metadata.artifact_type == "hyperpath_record")
+        .map(entry_as_record::<HyperpathRecord>)
+        .collect::<Result<Vec<_>, _>>()?;
+    if paths.is_empty() {
+        return Err("artifact bundle does not contain hyperpath_record entries".to_string());
+    }
+    paths.sort_by(|a, b| {
+        b.intervention_faithfulness
+            .0
+            .total_cmp(&a.intervention_faithfulness.0)
+            .then_with(|| a.path_id.0.cmp(&b.path_id.0))
+    });
+    Ok(evaluate_contract(&paths[0], lane, baselines))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{evaluate_contract, BaselineResult, ConformanceClass};
+    use super::{evaluate_bundle_contract, evaluate_contract, BaselineResult, ConformanceClass};
     use geoclt_ids::StableId;
-    use geoclt_schema::artifact::ArtifactMetadata;
+    use geoclt_schema::artifact::{ArtifactBundle, ArtifactEntry, ArtifactMetadata};
     use geoclt_schema::benchmark::BenchmarkLane;
     use geoclt_schema::hyperpath::HyperpathRecord;
     use geoclt_units::Score;
@@ -120,9 +170,8 @@ mod tests {
                 producer: "geoclt:test:0.2.0".to_string(),
                 trace_id: "trace-1".to_string(),
                 run_id: "run-1".to_string(),
-                content_hash:
-                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                        .to_string(),
+                content_hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    .to_string(),
                 created_at: "2026-01-01T00:00:00Z".to_string(),
             },
             path_id: StableId::from_parts(&["path", "x"]),
@@ -137,6 +186,46 @@ mod tests {
             intervention_faithfulness: Score(intervention),
             synergy_score_max: Score(0.09),
             admitted: false,
+        }
+    }
+
+    fn bundle(paths: Vec<HyperpathRecord>) -> ArtifactBundle {
+        ArtifactBundle {
+            bundle_id: "bundle-1".to_string(),
+            schema_version: 1,
+            producer: "geoclt:test:0.2.0".to_string(),
+            run_id: "run-1".to_string(),
+            trace_id: "trace-1".to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            transitional: false,
+            immutable: true,
+            artifacts: paths
+                .into_iter()
+                .map(|path| {
+                    let metadata = path.metadata.clone();
+                    ArtifactEntry {
+                        metadata,
+                        payload: serde_json::json!({
+                            "path_id": path.path_id,
+                            "behavior_id": path.behavior_id,
+                            "event_ids": path.event_ids,
+                            "chart_ids": path.chart_ids,
+                            "layer_ids": path.layer_ids,
+                            "transport_edge_ids": path.transport_edge_ids,
+                            "geodesic_deviation": path.geodesic_deviation,
+                            "chart_stability": path.chart_stability,
+                            "transport_coherence": path.transport_coherence,
+                            "intervention_faithfulness": path.intervention_faithfulness,
+                            "synergy_score_max": path.synergy_score_max,
+                            "admitted": path.admitted,
+                        }),
+                    }
+                })
+                .collect(),
+            bundle_hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                .to_string(),
+            bundle_signing_mode: None,
+            bundle_signature: None,
         }
     }
 
@@ -157,7 +246,10 @@ mod tests {
         let evaluation = evaluate_contract(&path(0.20, 0.20), &lane, &baselines);
         assert!(evaluation.admission.passed);
         assert!(evaluation.beats_baseline);
-        assert_eq!(evaluation.strongest_baseline_id.as_deref(), Some("pairwise_graph"));
+        assert_eq!(
+            evaluation.strongest_baseline_id.as_deref(),
+            Some("pairwise_graph")
+        );
         assert_eq!(evaluation.conformance_class, ConformanceClass::Conformant);
     }
 
@@ -217,5 +309,22 @@ mod tests {
         assert!(evaluation.beats_baseline);
         assert!(evaluation.falsifiers.geometry_non_predictiveness_triggered);
         assert_eq!(evaluation.conformance_class, ConformanceClass::Provisional);
+    }
+
+    #[test]
+    fn bundle_contract_prefers_strongest_hyperpath() {
+        let lane = lane();
+        let baselines = vec![BaselineResult {
+            baseline_id: "single_sae".to_string(),
+            intervention_faithfulness: 0.12,
+        }];
+        let evaluation = evaluate_bundle_contract(
+            &bundle(vec![path(0.16, 0.20), path(0.22, 0.20)]),
+            &lane,
+            &baselines,
+        )
+        .expect("bundle evaluation");
+        assert!(evaluation.beats_baseline);
+        assert_eq!(evaluation.conformance_class, ConformanceClass::Conformant);
     }
 }

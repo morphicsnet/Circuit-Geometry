@@ -3,11 +3,26 @@ name = "geoclt-runtime"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Typed staged runtime that assembles Geo-CLT kernel outputs into artifact bundles."
+documentation = "https://docs.rs/geoclt-runtime"
+readme = "README.md"
+keywords = ["geoclt", "runtime", "bundles", "science", "pipeline"]
+categories = ["science", "algorithms"]
 
 [dependencies]
-geoclt-benchmark = { path = "../geoclt-benchmark" }
-geoclt-artifacts = { path = "../geoclt-artifacts" }
-geoclt-schema = { path = "../geoclt-schema" }
-geoclt-sidecar = { path = "../geoclt-sidecar" }
+serde.workspace = true
+geoclt-benchmark.workspace = true
+geoclt-artifacts.workspace = true
+geoclt-atlas.workspace = true
+geoclt-canonicalize.workspace = true
+geoclt-causal.workspace = true
+geoclt-hypergraph.workspace = true
+geoclt-metric.workspace = true
+geoclt-schema.workspace = true
+geoclt-sidecar.workspace = true
+geoclt-transport.workspace = true
+geoclt-units.workspace = true
 chrono.workspace = true
 serde_json.workspace = true

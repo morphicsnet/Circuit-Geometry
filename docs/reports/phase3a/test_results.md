@@ -18,7 +18,7 @@
   "cluster_identity_deterministic": true,
   "decision_receipt_complete": true,
   "decision_receipt_schema_valid": true,
-  "git_commit": "a3894b4a02e010deacdc2ddc1ab1f803ccf23567",
+  "git_commit": "2007008f340a17efdca1a38d0d9f6c48e0a907ea",
   "lane_count": 7,
   "lane_falsifiers_valid": true,
   "lane_ids": [

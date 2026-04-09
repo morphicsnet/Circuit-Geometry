@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
+from .._paths import schema_path
 from ..artifacts import build_artifact_entry, validate_instance
-
-
-def _schema_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[3] / "schemas" / filename
 
 
 def build_pilot_scope_policy_record(
@@ -41,7 +37,7 @@ def build_pilot_scope_policy_record(
         },
         created_at="2026-01-01T00:00:00Z",
     )
-    validate_instance(record, _schema_path("pilot_scope_policy_record.schema.json"))
+    validate_instance(record, schema_path("pilot_scope_policy_record.schema.json"))
     return record
 
 

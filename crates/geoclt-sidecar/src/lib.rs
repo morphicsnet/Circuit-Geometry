@@ -1,3 +1,5 @@
+//! Sidecar server and trace-delivery bundle boundary for Geo-CLT.
+
 pub mod batching;
 pub mod emit;
 pub mod proto {

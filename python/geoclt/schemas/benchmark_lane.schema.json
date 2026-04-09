@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BenchmarkLane",
+  "type": "object",
+  "required": [
+    "lane_id",
+    "behavior_id",
+    "intervention_delta_threshold",
+    "synergy_threshold",
+    "chart_stability_threshold",
+    "transport_coherence_threshold",
+    "baseline_margin_threshold"
+  ],
+  "properties": {
+    "lane_id": { "type": "string" },
+    "behavior_id": { "type": "string" },
+    "intervention_delta_threshold": { "type": "number" },
+    "synergy_threshold": { "type": "number" },
+    "chart_stability_threshold": { "type": "number" },
+    "transport_coherence_threshold": { "type": "number" },
+    "baseline_margin_threshold": { "type": "number" }
+  }
+}

@@ -3,6 +3,13 @@ name = "geoclt-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Operator-facing CLI for Geo-CLT benchmark, artifact, and sidecar workflows."
+documentation = "https://docs.rs/geoclt-cli"
+readme = "README.md"
+keywords = ["geoclt", "cli", "benchmark", "artifacts", "science"]
+categories = ["science", "command-line-utilities"]
 
 [dependencies]
 clap.workspace = true
@@ -12,9 +19,10 @@ serde_json.workspace = true
 sha2.workspace = true
 toml.workspace = true
 tokio.workspace = true
-geoclt-artifacts = { path = "../geoclt-artifacts" }
-geoclt-benchmark = { path = "../geoclt-benchmark" }
-geoclt-ids = { path = "../geoclt-ids" }
-geoclt-schema = { path = "../geoclt-schema" }
-geoclt-units = { path = "../geoclt-units" }
-geoclt-sidecar = { path = "../geoclt-sidecar" }
+geoclt-artifacts.workspace = true
+geoclt-benchmark.workspace = true
+geoclt-ids.workspace = true
+geoclt-runtime.workspace = true
+geoclt-schema.workspace = true
+geoclt-units.workspace = true
+geoclt-sidecar.workspace = true

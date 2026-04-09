@@ -3,6 +3,7 @@ name = "geoclt-python-bindings"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish = false
 
 [lib]
 name = "geoclt_native"
@@ -10,4 +11,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3.workspace = true
-geoclt-ffi = { path = "../../crates/geoclt-ffi" }
+serde_json.workspace = true
+geoclt-ffi.workspace = true
